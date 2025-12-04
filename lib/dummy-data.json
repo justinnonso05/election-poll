@@ -1,0 +1,39 @@
+{
+  "admin": {
+    "email": "admin@nacosui.edu",
+    "role": "SUPERADMIN"
+  },
+  "association": {
+    "name": "NACOS UI",
+    "description": "Nigerian Association of Computer Science Students, UI"
+  },
+  "stats": {
+    "totalVoters": 1250,
+    "totalCandidates": 14,
+    "totalVotes": 847,
+    "voterTurnout": 67.8
+  },
+  "elections": [
+    {
+      "id": "1",
+      "title": "Presidential Election",
+      "status": "active",
+      "candidates": [
+        {
+          "id": "1",
+          "name": "Adebayo Ogundimu",
+          "position": "President",
+          "votes": 325,
+          "percentage": 38.4
+        },
+        {
+          "id": "2",
+          "name": "Chiamaka Eze",
+          "position": "President",
+          "votes": 298,
+          "percentage": 35.2
+        }
+      ]
+    }
+  ]
+}

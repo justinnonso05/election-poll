@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // directUrl = env("DIRECT_DATABASE_URL")
+}
+
+model Association {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String?
+  logoUrl     String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  admins      Admin[]
+  elections   Election[]
+  positions   Position[]
+  voters      Voter[]
+}
+
+model Admin {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String
+  role          AdminRole
+  associationId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  association   Association @relation(fields: [associationId], references: [id])
+}
+
+model Voter {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  studentId     String
+  hasVoted      Boolean     @default(false)
+  associationId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  first_name    String
+  last_name     String
+  password      String
+  level         String
+  votes         Vote[]
+  association   Association @relation(fields: [associationId], references: [id])
+}
+
+model Election {
+  id            String      @id @default(uuid())
+  title         String
+  description   String?
+  associationId String
+  startAt       DateTime
+  endAt         DateTime
+  isActive      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  candidates    Candidate[]
+  association   Association @relation(fields: [associationId], references: [id])
+  votes         Vote[]
+  manifestoEmbeddings ManifestoEmbedding[] // Add this relation
+  frequentlyAskedQuestions FrequentlyAskedQuestion[] // Add this line
+}
+
+model Position {
+  id            String      @id @default(uuid())
+  name          String
+  description   String?
+  order         Int         @default(0)
+  maxCandidates Int         @default(10)
+  associationId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  candidates    Candidate[]
+  association   Association @relation(fields: [associationId], references: [id])
+
+  @@unique([name, associationId])
+}
+
+model Candidate {
+  id               String   @id @default(uuid())
+  name             String
+  manifesto        String?  // Keep this as the PDF URL (existing usage)
+  manifestoText    String?  @db.Text // New: extracted text from PDF
+  manifestoSummary String?  @db.Text // New: AI-generated summary
+  photoUrl         String?  @default("https://res.cloudinary.com/dpyxbvcyl/image/upload/v1759396141/UNDECIDED_qsubo3.png")
+  electionId       String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  positionId       String
+  election         Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  position         Position @relation(fields: [positionId], references: [id])
+  votes            Vote[]
+  manifestoEmbeddings ManifestoEmbedding[] // Add this relation
+
+  @@unique([electionId, positionId, name])
+}
+
+model Vote {
+  id          String    @id @default(uuid())
+  voterId     String
+  electionId  String
+  candidateId String
+  createdAt   DateTime  @default(now())
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  election    Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  voter       Voter     @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([voterId, electionId, candidateId])
+}
+
+model ManifestoEmbedding {
+  id          String   @id @default(uuid())
+  electionId  String
+  candidateId String
+  chunkText   String   @db.Text
+  embedding   Unsupported("vector(384)")?  // Changed from 768 to 384
+  metadata    Json?
+  createdAt   DateTime @default(now()) @db.Timestamptz()
+  
+  election    Election  @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@map("manifesto_embeddings")
+}
+
+model FrequentlyAskedQuestion {
+  id         String   @id @default(uuid())
+  electionId String
+  question   String   @db.Text
+  answer     String   @db.Text
+  sources    Json     // Store source information as JSON
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  election Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  
+  @@unique([electionId, question])
+  @@map("frequently_asked_questions")
+}
+
+enum AdminRole {
+  SUPERADMIN
+  ADMIN
+}

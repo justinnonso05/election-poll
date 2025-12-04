@@ -1,0 +1,28 @@
+.pieChart {
+  position: relative;
+  width: 8rem;
+  height: 8rem;
+}
+
+.pieChartBackground {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.pieChartCenter {
+  position: absolute;
+  inset: 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dynamic pie chart background - will be set via CSS custom property */
+.pieChartDynamic {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--pie-chart-gradient);
+}
