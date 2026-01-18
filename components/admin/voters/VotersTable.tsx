@@ -96,8 +96,34 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
     setShowDetailModal(true);
   };
 
-  const handleSendNotification = (voterIds: string[]) => {
-    toast.success(`Sending credentials to ${voterIds.length} voter(s)`);
+  const handleSendNotification = async (voterIds: string[]) => {
+    const loadingToast = toast.loading(`Sending credentials to ${voterIds.length} voter(s)...`);
+
+    try {
+      const response = await fetch('/api/voters/send-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ voterIds }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || `Credentials sent to ${voterIds.length} voter(s)`, {
+          id: loadingToast,
+        });
+        console.log('Email stats:', data.keyUsageStats);
+      } else {
+        toast.error(data.error || 'Failed to send credentials', {
+          id: loadingToast,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending credentials:', error);
+      toast.error('Failed to send credentials', {
+        id: loadingToast,
+      });
+    }
   };
 
   const handleDeleteVoters = async (voterIds: string[]) => {
@@ -167,7 +193,7 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
             </div>
 
             {/* Bulk Actions */}
-            {selectedVoters.length > 0 && (
+            {selectedVoters.length > 0 ? (
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   variant="outline"
@@ -189,6 +215,17 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
                   Delete ({selectedVoters.length})
                 </Button>
               </div>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleSendNotification(filteredVoters.map(v => v.id))}
+                className="w-full sm:w-auto"
+                disabled={filteredVoters.length === 0}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Send to All Voters ({filteredVoters.length})
+              </Button>
             )}
           </div>
         </div>

@@ -155,8 +155,15 @@ async function processManifestoPDF(file: File, candidateId: string) {
     // @ts-expect-error
     const secureUrl = uploadRes.secure_url;
 
-    // Step 3: Generate AI summary
-    const summary = await generateManifestoSummary(extracted.text, candidate.name);
+    // Step 3: Generate AI summary (only if not already exists)
+    let summary = candidate.manifestoSummary; // Check if summary already exists
+
+    if (!summary || summary.trim().length < 50) {
+      console.log('Generating new manifesto summary...');
+      summary = await generateManifestoSummary(extracted.text, candidate.name);
+    } else {
+      console.log('Using existing manifesto summary (skipping AI generation)');
+    }
 
     // Step 4: Update candidate in database
     const updatedCandidate = await prisma.candidate.update({
@@ -168,12 +175,22 @@ async function processManifestoPDF(file: File, candidateId: string) {
       },
     });
 
-    // Step 5: Index manifesto in vector store for Q&A
-    await ManifestoVectorStore.addManifesto(
+    // Step 5: Index manifesto in vector store for Q&A (only if not already indexed)
+    const alreadyIndexed = await ManifestoVectorStore.manifestoExists(
       candidateId,
-      candidate.electionId,
-      extracted.text
+      candidate.electionId
     );
+
+    if (!alreadyIndexed) {
+      console.log('Indexing manifesto in vector store...');
+      await ManifestoVectorStore.addManifesto(
+        candidateId,
+        candidate.electionId,
+        extracted.text
+      );
+    } else {
+      console.log('Manifesto already indexed, skipping vector store update');
+    }
 
     return success('Manifesto uploaded, processed, and indexed successfully', {
       candidate: {
@@ -195,9 +212,9 @@ async function processManifestoPDF(file: File, candidateId: string) {
 
   } catch (error: unknown) { // Fixed: proper error typing
     console.error('Manifesto processing error:', error);
-    
+
     let errorMessage = 'Failed to process manifesto';
-    
+
     if (error instanceof Error) {
       if (error.message.includes('PDF')) {
         errorMessage = `PDF Processing Error: ${error.message}`;
@@ -209,7 +226,7 @@ async function processManifestoPDF(file: File, candidateId: string) {
         errorMessage = error.message;
       }
     }
-    
+
     return fail(errorMessage, null, 500);
   }
 }
