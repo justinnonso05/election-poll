@@ -11,6 +11,10 @@ import DataExportSection from '@/components/admin/settings/DataExportSection';
 import DangerZoneSection from '@/components/admin/settings/DangerZoneSection';
 import type { Election } from '@prisma/client';
 
+// Force dynamic rendering - fetch fresh data on every request
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 function calculateElectionStatus(election: Election | null) {
   if (!election) return 'NO_ELECTION';
 

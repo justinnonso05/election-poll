@@ -7,6 +7,10 @@ import Image from 'next/image';
 import { formatDateLong } from '@/lib/timezone';
 import DownloadResultsPDF from '@/components/results/DownloadResultsPDF';
 
+// Force dynamic rendering - fetch fresh data on every request
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface ElectionResult {
   id: string;
   title: string;
@@ -266,8 +270,8 @@ export default async function ResultsPage() {
                           <tr
                             key={candidate.id}
                             className={`border-b transition-colors hover:bg-muted/30 ${candidate.isWinner
-                                ? 'bg-green-50 dark:bg-green-950/20'
-                                : ''
+                              ? 'bg-green-50 dark:bg-green-950/20'
+                              : ''
                               }`}
                           >
                             {/* Rank */}
@@ -275,8 +279,8 @@ export default async function ResultsPage() {
                               <div className="flex items-center gap-2">
                                 <div
                                   className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${candidate.isWinner
-                                      ? 'bg-yellow-500 text-white'
-                                      : 'bg-muted text-muted-foreground'
+                                    ? 'bg-yellow-500 text-white'
+                                    : 'bg-muted text-muted-foreground'
                                     }`}
                                 >
                                   {index + 1}

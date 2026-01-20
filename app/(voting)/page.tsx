@@ -4,6 +4,10 @@ import { prisma } from '@/lib/prisma';
 import VoterLogin from '@/components/voting/VoterLogin';
 import VotingInterface from '@/components/voting/VotingInterface';
 
+// Force dynamic rendering - fetch fresh data on every request
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getVoterSession() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get('voter-session')?.value;
