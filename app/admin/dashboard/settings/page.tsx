@@ -15,9 +15,16 @@ function calculateElectionStatus(election: Election | null) {
   if (!election) return 'NO_ELECTION';
 
   const now = new Date();
+  const start = new Date(election.startAt);
+  const end = new Date(election.endAt);
+
+  // Check time-based status first (higher priority)
+  if (now > end) return 'ENDED';
+  if (now < start) return 'NOT_STARTED';
+
+  // Then check isActive flag (only relevant during election period)
   if (!election.isActive) return 'PAUSED';
-  if (now < new Date(election.startAt)) return 'NOT_STARTED';
-  if (now > new Date(election.endAt)) return 'ENDED';
+
   return 'ACTIVE';
 }
 

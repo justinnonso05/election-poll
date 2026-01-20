@@ -13,9 +13,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  eslint: {
-    ignoreDuringBuilds: true, // This will ignore all ESLint warnings during build
-  },
 };
 
 export default nextConfig;

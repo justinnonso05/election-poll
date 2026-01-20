@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trophy, Users, Calendar, Clock } from 'lucide-react';
 import Image from 'next/image';
+import { formatDateLong } from '@/lib/timezone';
+import DownloadResultsPDF from '@/components/results/DownloadResultsPDF';
 
 interface ElectionResult {
   id: string;
@@ -35,10 +37,9 @@ interface CandidateResult {
 }
 
 async function getElectionResults() {
-  // Get the most recent ended election
+  // Get the most recent ended election (regardless of isActive status)
   const election = await prisma.election.findFirst({
     where: {
-      isActive: true,
       endAt: { lt: new Date() }, // Election must be ended
     },
     include: {
@@ -131,13 +132,7 @@ async function getElectionResults() {
 }
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatDateLong(date);
 }
 
 function getInitials(name: string) {
@@ -181,7 +176,7 @@ export default async function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div id="results-container" className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <Card>
           <CardHeader className="text-center">
@@ -224,6 +219,15 @@ export default async function ResultsPage() {
                 Total Votes: {totalVoters}
               </div>
             </div>
+
+            {/* Download PDF Button */}
+            <div className="mt-6">
+              <DownloadResultsPDF
+                electionId={election.id}
+                electionTitle={election.title}
+                associationName={election.association.name}
+              />
+            </div>
           </CardHeader>
         </Card>
 
@@ -241,91 +245,102 @@ export default async function ResultsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {position.candidates.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">
-                      No candidates for this position
-                    </p>
-                  ) : (
-                    position.candidates.map((candidate, index) => (
-                      <div
-                        key={candidate.id}
-                        className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
-                          candidate.isWinner
-                            ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
-                            : 'bg-card'
-                        }`}
-                      >
-                        {/* Ranking */}
-                        <div className="flex-shrink-0">
-                          {candidate.isWinner ? (
-                            <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold">
-                              👑
-                            </div>
-                          ) : (
-                            <div className="w-8 h-8 bg-muted text-muted-foreground rounded-full flex items-center justify-center font-semibold">
-                              {index + 1}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Candidate Photo */}
-                        <div className="flex-shrink-0">
-                          {candidate.photoUrl ? (
-                            <Image
-                              src={candidate.photoUrl}
-                              alt={candidate.name}
-                              width={48}
-                              height={48}
-                              className="w-12 h-12 object-cover rounded-full border"
-                            />
-                          ) : (
-                            <Avatar className="w-12 h-12">
-                              <AvatarFallback>{getInitials(candidate.name)}</AvatarFallback>
-                            </Avatar>
-                          )}
-                        </div>
-
-                        {/* Candidate Info */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{candidate.name}</h3>
-                            {candidate.isWinner && (
-                              <Badge className="bg-green-600 text-white">Winner</Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-sm text-muted-foreground">
-                              {candidate.votes} votes ({candidate.percentage.toFixed(1)}%)
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Vote Bar */}
-                        <div className="flex-shrink-0 w-32">
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full transition-all ${
-                                candidate.isWinner
-                                  ? 'bg-green-600'
-                                  : 'bg-blue-600'
+                {position.candidates.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No candidates for this position
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/50">
+                          <th className="text-left p-3 font-semibold">Rank</th>
+                          <th className="text-left p-3 font-semibold">Candidate</th>
+                          <th className="text-center p-3 font-semibold">Votes</th>
+                          <th className="text-center p-3 font-semibold">Percentage</th>
+                          <th className="text-center p-3 font-semibold">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {position.candidates.map((candidate, index) => (
+                          <tr
+                            key={candidate.id}
+                            className={`border-b transition-colors hover:bg-muted/30 ${candidate.isWinner
+                                ? 'bg-green-50 dark:bg-green-950/20'
+                                : ''
                               }`}
-                              style={{ width: `${candidate.percentage}%` }}
-                            />
-                          </div>
-                        </div>
+                          >
+                            {/* Rank */}
+                            <td className="p-3">
+                              <div className="flex items-center gap-2">
+                                <div
+                                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold ${candidate.isWinner
+                                      ? 'bg-yellow-500 text-white'
+                                      : 'bg-muted text-muted-foreground'
+                                    }`}
+                                >
+                                  {index + 1}
+                                </div>
+                              </div>
+                            </td>
 
-                        {/* Vote Count */}
-                        <div className="flex-shrink-0 text-right">
-                          <div className="text-lg font-bold">{candidate.votes}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {candidate.percentage.toFixed(1)}%
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                            {/* Candidate */}
+                            <td className="p-3">
+                              <div className="flex items-center gap-3">
+                                {candidate.photoUrl ? (
+                                  <Image
+                                    src={candidate.photoUrl}
+                                    alt={candidate.name}
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10 object-cover rounded-full border"
+                                  />
+                                ) : (
+                                  <Avatar className="w-10 h-10">
+                                    <AvatarFallback>
+                                      {getInitials(candidate.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                )}
+                                <span className="font-medium">{candidate.name}</span>
+                              </div>
+                            </td>
+
+                            {/* Votes */}
+                            <td className="p-3 text-center">
+                              <span className="text-lg font-bold">{candidate.votes}</span>
+                            </td>
+
+                            {/* Percentage */}
+                            <td className="p-3 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className="font-semibold">
+                                  {candidate.percentage.toFixed(1)}%
+                                </span>
+                                <div className="w-full max-w-[100px] bg-muted rounded-full h-2">
+                                  <div
+                                    className={`h-2 rounded-full transition-all ${candidate.isWinner ? 'bg-green-600' : 'bg-blue-600'
+                                      }`}
+                                    style={{ width: `${candidate.percentage}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Status */}
+                            <td className="p-3 text-center">
+                              {candidate.isWinner && (
+                                <Badge className="bg-green-600 text-white font-semibold">
+                                  WINNER
+                                </Badge>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -336,13 +351,7 @@ export default async function ResultsPage() {
           <CardContent className="pt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Results are final and official. Generated on{' '}
-              {new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatDateLong(new Date())}
             </p>
           </CardContent>
         </Card>

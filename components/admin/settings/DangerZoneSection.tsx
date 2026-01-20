@@ -44,18 +44,43 @@ export default function DangerZoneSection({ election }: DangerZoneSectionProps) 
     try {
       // Export data first if requested
       if (exportBeforeDelete) {
-        const response = await fetch(`/api/election/${election.id}/export?type=all`);
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = `${election.title}-complete-backup-${new Date().toISOString().split('T')[0]}.zip`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
+        toast.loading('Exporting election data...');
+
+        const exportTypes = ['results', 'voters', 'candidates'];
+        const dateStr = new Date().toISOString().split('T')[0];
+
+        // Export all three PDFs
+        for (const type of exportTypes) {
+          try {
+            const response = await fetch(
+              `/api/election/${election.id}/export?type=${type}&format=pdf`
+            );
+
+            if (response.ok) {
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.style.display = 'none';
+              a.href = url;
+
+              const fileName = `${election.title.replace(/\s+/g, '_')}_${type}_${dateStr}.pdf`;
+              a.download = fileName;
+
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              // Small delay between downloads
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+          } catch (error) {
+            console.error(`Failed to export ${type}:`, error);
+          }
         }
+
+        toast.dismiss();
+        toast.success('All data exported successfully');
       }
 
       // Delete the election

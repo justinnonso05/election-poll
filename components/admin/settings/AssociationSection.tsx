@@ -51,11 +51,11 @@ export default function AssociationSection({ association }: AssociationSectionPr
     });
     const data = await res.json();
     setUploading(false);
-    if (data.success && data.url) {
+    if (data.status === 'success' && data.data?.url) {
       toast.success('Image uploaded!');
-      setFormData((prev) => ({ ...prev, logoUrl: data.url })); // Save secure_url for later save
+      setFormData((prev) => ({ ...prev, logoUrl: data.data.url })); // Save secure_url for later save
     } else {
-      toast.error(data.error || 'Upload failed');
+      toast.error(data.message || 'Upload failed');
     }
   };
 
@@ -169,17 +169,34 @@ export default function AssociationSection({ association }: AssociationSectionPr
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   disabled={uploading}
-                  className="mt-2"
+                  className="hidden"
                   title="Select association logo image"
                 />
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={handleUpload}
-                  disabled={uploading || !selectedFile}
-                >
-                  {uploading ? 'Uploading...' : 'Upload Image'}
-                </Button>
+                <div className="flex gap-2 items-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    Choose Image
+                  </Button>
+                  {selectedFile && (
+                    <>
+                      <span className="text-sm text-muted-foreground">
+                        {selectedFile.name}
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={handleUpload}
+                        disabled={uploading}
+                      >
+                        {uploading ? 'Uploading...' : 'Upload Image'}
+                      </Button>
+                    </>
+                  )}
+                </div>
               </>
             )}
           </div>

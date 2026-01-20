@@ -9,7 +9,7 @@ export const adminSchema = z.object({
 
 export const updateSchema = z.object({
   email: z.email(),
-  currentPassword: z.string().min(6).optional(),
-  newPassword: z.string().min(6).optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().optional(),
   confirmPassword: z.string().optional(),
 });

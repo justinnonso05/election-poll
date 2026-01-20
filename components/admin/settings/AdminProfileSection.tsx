@@ -31,17 +31,25 @@ export default function AdminProfileSection({ admin }: AdminProfileSectionProps)
 
     setLoading(true);
     try {
-      // Only include fields that have values
+      // Build payload - always include email and currentPassword if provided
       const payload: {
         email: string;
+        currentPassword?: string;
         newPassword?: string;
         confirmPassword?: string;
-        currentPassword?: string;
-      } = { email: formData.email };
+      } = {
+        email: formData.email,
+      };
+
+      // Include currentPassword if provided (needed for any changes)
+      if (formData.currentPassword) {
+        payload.currentPassword = formData.currentPassword;
+      }
+
+      // Include password fields if changing password
       if (formData.newPassword) {
         payload.newPassword = formData.newPassword;
         payload.confirmPassword = formData.confirmPassword;
-        payload.currentPassword = formData.currentPassword;
       }
 
       const response = await fetch('/api/admin/update', {
@@ -49,6 +57,8 @@ export default function AdminProfileSection({ admin }: AdminProfileSectionProps)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
+
+      const result = await response.json();
 
       if (response.ok) {
         toast.success('Profile updated successfully');
@@ -60,7 +70,7 @@ export default function AdminProfileSection({ admin }: AdminProfileSectionProps)
           confirmPassword: '',
         }));
       } else {
-        toast.error('Failed to update profile');
+        toast.error(result.message || 'Failed to update profile');
       }
     } catch {
       toast.error('Something went wrong');
