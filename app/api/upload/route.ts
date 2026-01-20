@@ -7,6 +7,12 @@ import { success, fail } from '@/lib/apiREsponse';
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
+// Explicitly set runtime to nodejs (required for Prisma, Cloudinary, pdf-parse)
+export const runtime = 'nodejs';
+
+// Increase max duration for file processing (Vercel Pro allows up to 300s)
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();

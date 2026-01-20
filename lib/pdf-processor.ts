@@ -1,4 +1,4 @@
-import { PDFParse } from 'pdf-parse';
+import { pdf } from 'pdf-parse';
 
 export interface ProcessedManifesto {
   text: string;
@@ -8,13 +8,10 @@ export interface ProcessedManifesto {
 
 export async function extractTextFromPDF(buffer: Buffer): Promise<ProcessedManifesto> {
   try {
-    // Initialize parser with buffer
-    const parser = new PDFParse({ data: buffer });
-    
-    // Extract text using getText method
-    const textResult = await parser.getText();
+    // pdf-parse is a function that takes a buffer and returns parsed data
+    const data = await pdf(buffer);
 
-    const cleanText = textResult.text
+    const cleanText = data.text
       .replace(/\s+/g, " ")
       .replace(/\n+/g, "\n")
       .trim();
@@ -27,7 +24,7 @@ export async function extractTextFromPDF(buffer: Buffer): Promise<ProcessedManif
 
     return {
       text: cleanText,
-      pageCount: textResult.total,
+      pageCount: data.total,
       wordCount,
     };
   } catch (error: any) {
