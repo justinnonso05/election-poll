@@ -1,6 +1,6 @@
 import cloudinary from '@/lib/cloudinary';
 import { prisma } from '@/lib/prisma';
-import { extractTextFromPDF, validatePDF } from '@/lib/pdf-processor';
+// Remove static import of pdf-processor - will use dynamic import instead
 import { generateManifestoSummary } from '@/lib/ai/manifesto-ai';
 import { ManifestoVectorStore } from '@/lib/ai/supabase-vector-store';
 import { success, fail } from '@/lib/apiREsponse';
@@ -39,6 +39,8 @@ export async function POST(req: Request) {
         );
       }
 
+      // Dynamic import of PDF validation to avoid loading pdf-parse for image uploads
+      const { validatePDF } = await import('@/lib/pdf-processor');
       const validation = validatePDF(file);
       if (!validation.valid) {
         return fail(validation.error!, null, 400);
@@ -133,7 +135,8 @@ async function processManifestoPDF(file: File, candidateId: string) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Step 1: Extract text from PDF
+    // Step 1: Extract text from PDF (dynamic import to avoid loading pdf-parse unnecessarily)
+    const { extractTextFromPDF } = await import('@/lib/pdf-processor');
     const extracted = await extractTextFromPDF(buffer);
 
     // Step 2: Upload PDF to Cloudinary
