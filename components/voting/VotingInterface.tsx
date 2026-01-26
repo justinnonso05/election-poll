@@ -194,10 +194,10 @@ export default function VotingInterface({ voter, election, positions }: VotingIn
 
               {/* Brand and Association Names */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                <h1 className="text-sm sm:text-lg font-bold text-foreground">NACOS POLL</h1>
+                <h1 className="text-sm sm:text-lg font-bold text-foreground">{election.association.name} POLL</h1>
                 <span className="hidden sm:inline text-muted-foreground">|</span>
                 <span className="text-xs sm:text-sm font-semibold text-muted-foreground">
-                  {election.association.name}
+                  {election.title}
                 </span>
               </div>
             </div>

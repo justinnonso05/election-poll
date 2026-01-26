@@ -21,6 +21,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import VoterDetailModal from './VoterDetailModal';
 import { toast } from 'sonner';
 import type { Voter } from '@prisma/client';
@@ -46,6 +56,8 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
   const [selectedVoters, setSelectedVoters] = useState<string[]>([]);
   const [selectedVoter, setSelectedVoter] = useState<Voter | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
+  const [votersToEmail, setVotersToEmail] = useState<string[]>([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,7 +108,14 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
     setShowDetailModal(true);
   };
 
-  const handleSendNotification = async (voterIds: string[]) => {
+  const handleSendNotification = (voterIds: string[]) => {
+    setVotersToEmail(voterIds);
+    setShowEmailConfirm(true);
+  };
+
+  const confirmSendNotification = async () => {
+    setShowEmailConfirm(false);
+    const voterIds = votersToEmail;
     const loadingToast = toast.loading(`Sending credentials to ${voterIds.length} voter(s)...`);
 
     try {
@@ -467,6 +486,26 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
           setVoters((prev) => prev.map((v) => (v.id === updatedVoter.id ? updatedVoter : v)));
         }}
       />
-    </Card>
+
+
+      {/* Email Confirmation Dialog */}
+      <AlertDialog open={showEmailConfirm} onOpenChange={setShowEmailConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send Credentials?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to send login credentials to {votersToEmail.length} voter(s)?
+              This will send emails containing their student ID and password.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSendNotification}>
+              Send Emails
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card >
   );
 }

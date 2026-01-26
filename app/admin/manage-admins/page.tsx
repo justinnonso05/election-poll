@@ -92,7 +92,7 @@ export default function ManageAdminsPage() {
 
   const updateAdminRole = async (adminId: string, newRole: 'ADMIN' | 'SUPERADMIN') => {
     try {
-      const response = await fetch('/api/admin/update', {
+      const response = await fetch('/api/admin/update-role', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -29,6 +29,18 @@ interface ElectionDetailsModalProps {
   onUpdate?: () => void;
 }
 
+// Helper to format date for datetime-local input in local timezone
+const toLocalDatetimeValue = (dateStr: Date | string | null) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  // Get offset in minutes (e.g., -60 for UTC+1)
+  const offset = date.getTimezoneOffset();
+  // Adjust date by subtracting offset (which effectively adds the timezone difference)
+  const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+  // Return ISO string sliced to minutes
+  return adjustedDate.toISOString().slice(0, 16);
+};
+
 // ...rest of your component...
 
 export default function ElectionDetailsModal({
@@ -53,8 +65,8 @@ export default function ElectionDetailsModal({
       setFormData({
         title: election.title || '',
         description: election.description || '',
-        startAt: election.startAt ? new Date(election.startAt).toISOString().slice(0, 16) : '',
-        endAt: election.endAt ? new Date(election.endAt).toISOString().slice(0, 16) : '',
+        startAt: toLocalDatetimeValue(election.startAt),
+        endAt: toLocalDatetimeValue(election.endAt),
         isActive: election.isActive || false,
       });
     }
@@ -203,8 +215,8 @@ export default function ElectionDetailsModal({
       setFormData({
         title: election.title || '',
         description: election.description || '',
-        startAt: election.startAt ? new Date(election.startAt).toISOString().slice(0, 16) : '',
-        endAt: election.endAt ? new Date(election.endAt).toISOString().slice(0, 16) : '',
+        startAt: toLocalDatetimeValue(election.startAt),
+        endAt: toLocalDatetimeValue(election.endAt),
         isActive: election.isActive || false,
       });
     }
@@ -226,13 +238,12 @@ export default function ElectionDetailsModal({
               {timeRemaining && (
                 <Badge
                   variant="outline"
-                  className={`${
-                    timeRemaining.type === 'active'
+                  className={`${timeRemaining.type === 'active'
                       ? 'text-green-700 dark:text-green-300'
                       : timeRemaining.type === 'upcoming'
                         ? 'text-blue-700 dark:text-blue-300'
                         : 'text-red-700 dark:text-red-300'
-                  }`}
+                    }`}
                 >
                   {timeRemaining.message}
                 </Badge>
@@ -413,13 +424,12 @@ export default function ElectionDetailsModal({
                     <div className="text-sm text-muted-foreground">
                       {timeRemaining ? (
                         <p
-                          className={`font-medium ${
-                            timeRemaining.type === 'active'
+                          className={`font-medium ${timeRemaining.type === 'active'
                               ? 'text-green-600 dark:text-green-400'
                               : timeRemaining.type === 'upcoming'
                                 ? 'text-blue-600 dark:text-blue-400'
                                 : 'text-red-600 dark:text-red-400'
-                          }`}
+                            }`}
                         >
                           {timeRemaining.message}
                         </p>

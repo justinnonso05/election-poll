@@ -8,6 +8,7 @@ import { Users, UserCheck, Vote, TrendingUp, Trophy, Calendar } from 'lucide-rea
 import TurnoutChart from '@/components/admin/TurnoutChart';
 import PositionResultsSlider from '@/components/admin/PositionResultsSlider';
 import TurnoutByLevelChart from '@/components/admin/TurnoutByLevelChart';
+import FormattedDate from '@/components/FormattedDate';
 
 async function getDashboardData(associationId: string) {
   // Get active election
@@ -206,27 +207,7 @@ export default async function AdminDashboard() {
     );
   }
 
-  // Full date format for desktop
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
-  // Short date format for mobile
-  const formatDateShort = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const getElectionStatus = () => {
     const now = new Date();
@@ -254,17 +235,17 @@ export default async function AdminDashboard() {
               <p className="text-sm text-muted-foreground mb-2 truncate">
                 {election.association.name}
               </p>
-              
+
               {/* Desktop date format */}
               <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
-                {formatDate(election.startAt)} - {formatDate(election.endAt)}
+                <FormattedDate date={election.startAt} format="full" /> - <FormattedDate date={election.endAt} format="full" />
               </p>
-              
+
               {/* Mobile date format */}
               <p className="sm:hidden text-xs text-muted-foreground mb-2">
-                {formatDateShort(election.startAt)} - {formatDateShort(election.endAt)}
+                <FormattedDate date={election.startAt} format="short" /> - <FormattedDate date={election.endAt} format="short" />
               </p>
-              
+
               <Badge variant={electionStatus.variant} className="text-xs">
                 {electionStatus.status}
               </Badge>

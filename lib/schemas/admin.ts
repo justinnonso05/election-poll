@@ -13,3 +13,8 @@ export const updateSchema = z.object({
   newPassword: z.string().optional(),
   confirmPassword: z.string().optional(),
 });
+
+export const roleUpdateSchema = z.object({
+  id: z.string().uuid(),
+  role: z.enum(['SUPERADMIN', 'ADMIN']),
+});
