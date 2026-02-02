@@ -5,9 +5,14 @@ import { prisma } from '@/lib/prisma';
 import { brevoEmailService } from '@/lib/email/brevo-service';
 import { generateVoterCredentialsEmail } from '@/lib/email/templates';
 
+// Helper to format data for the stream
+function encodeChunk(data: any) {
+  return new TextEncoder().encode(JSON.stringify(data) + '\n');
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin authentication
+    // 1. Authentication & Validation (Same as before)
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -25,17 +30,13 @@ export async function POST(request: NextRequest) {
     const { voterIds } = body;
 
     if (!voterIds || !Array.isArray(voterIds) || voterIds.length === 0) {
-      return NextResponse.json(
-        { error: 'Voter IDs are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Voter IDs are required' }, { status: 400 });
     }
 
-    // Fetch voters
     const voters = await prisma.voter.findMany({
       where: {
         id: { in: voterIds },
-        associationId: admin.associationId, // Ensure admin can only send to their association's voters
+        associationId: admin.associationId,
       },
     });
 
@@ -43,38 +44,97 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No voters found' }, { status: 404 });
     }
 
-    // Get the login URL (adjust based on your app structure)
     const loginUrl = `${process.env.NEXTAUTH_URL}/voter/login`;
 
-    // Prepare emails
-    const emails = voters.map((voter) => {
-      const template = generateVoterCredentialsEmail({
-        firstName: voter.first_name,
-        lastName: voter.last_name,
-        email: voter.email,
-        studentId: voter.studentId,
-        password: voter.password,
-        loginUrl,
-      });
+    // 2. Setup Streaming Response
+    const stream = new ReadableStream({
+      async start(controller) {
+        let successCount = 0;
+        let failedCount = 0;
 
-      return {
-        to: [{ email: voter.email, name: `${voter.first_name} ${voter.last_name}` }],
-        subject: template.subject,
-        htmlContent: template.htmlContent,
-        textContent: template.textContent,
-      };
+        try {
+          for (const [index, voter] of voters.entries()) {
+            // Send pending status
+            controller.enqueue(encodeChunk({
+              type: 'progress',
+              status: 'pending',
+              message: `[${index + 1}/${voters.length}] Preparing email for ${voter.first_name} (${voter.email})...`,
+            }));
+
+            try {
+              const template = generateVoterCredentialsEmail({
+                firstName: voter.first_name,
+                lastName: voter.last_name,
+                email: voter.email,
+                studentId: voter.studentId,
+                password: voter.password,
+                loginUrl,
+              });
+
+              const emailData = {
+                to: [{ email: voter.email, name: `${voter.first_name} ${voter.last_name}` }],
+                subject: template.subject,
+                htmlContent: template.htmlContent,
+                textContent: template.textContent,
+              };
+
+              // Send using your existing service (handles key rotation)
+              const result = await brevoEmailService.sendEmail(emailData);
+
+              if (result.success) {
+                successCount++;
+                controller.enqueue(encodeChunk({
+                  type: 'progress',
+                  status: 'success',
+                  message: `[${index + 1}/${voters.length}] Sent successfully to ${voter.email}`,
+                }));
+              } else {
+                failedCount++;
+                controller.enqueue(encodeChunk({
+                  type: 'progress',
+                  status: 'error',
+                  message: `[${index + 1}/${voters.length}] Failed: ${voter.email} - ${result.error}`,
+                }));
+              }
+            } catch (err: any) {
+              failedCount++;
+              controller.enqueue(encodeChunk({
+                type: 'progress',
+                status: 'error',
+                message: `[${index + 1}/${voters.length}] Error processing ${voter.email}: ${err.message}`,
+              }));
+            }
+
+            // Tiny delay to be safe, matching your original "bulk" logic
+            await new Promise(r => setTimeout(r, 100)); // 100ms
+          }
+
+          // Final summary
+          controller.enqueue(encodeChunk({
+            type: 'summary',
+            total: voters.length,
+            successful: successCount,
+            failed: failedCount,
+          }));
+
+        } catch (error: any) {
+          controller.enqueue(encodeChunk({
+            type: 'error',
+            message: error.message || 'Critical error in email process',
+          }));
+        } finally {
+          controller.close();
+        }
+      },
     });
 
-    // Send emails
-    const result = await brevoEmailService.sendBulkEmails(emails);
-
-    return NextResponse.json({
-      message: `Sent credentials to ${result.successful} out of ${result.total} voters`,
-      total: result.total,
-      successful: result.successful,
-      failed: result.failed,
-      keyUsageStats: brevoEmailService.getKeyUsageStats(),
+    return new NextResponse(stream, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Transfer-Encoding': 'chunked'
+      },
     });
+
   } catch (error: any) {
     console.error('Error sending credentials:', error);
     return NextResponse.json(

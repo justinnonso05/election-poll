@@ -32,6 +32,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import VoterDetailModal from './VoterDetailModal';
+import EmailLogModal, { LogEntry } from './EmailLogModal';
 import { toast } from 'sonner';
 import type { Voter } from '@prisma/client';
 
@@ -58,6 +59,10 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
   const [votersToEmail, setVotersToEmail] = useState<string[]>([]);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [emailLogs, setEmailLogs] = useState<LogEntry[]>([]);
+  const [isEmailProcessing, setIsEmailProcessing] = useState(false);
+  const [emailSummary, setEmailSummary] = useState<{ total: number; successful: number; failed: number } | undefined>(undefined);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,8 +120,14 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
 
   const confirmSendNotification = async () => {
     setShowEmailConfirm(false);
+
+    // Open the logs modal immediately
+    setEmailLogs([]);
+    setEmailSummary(undefined);
+    setIsEmailProcessing(true);
+    setShowLogModal(true);
+
     const voterIds = votersToEmail;
-    const loadingToast = toast.loading(`Sending credentials to ${voterIds.length} voter(s)...`);
 
     try {
       const response = await fetch('/api/voters/send-credentials', {
@@ -125,23 +136,68 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
         body: JSON.stringify({ voterIds }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(data.message || `Credentials sent to ${voterIds.length} voter(s)`, {
-          id: loadingToast,
-        });
-        console.log('Email stats:', data.keyUsageStats);
-      } else {
-        toast.error(data.error || 'Failed to send credentials', {
-          id: loadingToast,
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to start process');
       }
-    } catch (error) {
+
+      if (!response.body) throw new Error('ReadableStream not supported by browser.');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (value) {
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          const lines = buffer.split('\n');
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.trim()) continue;
+
+            try {
+              const data = JSON.parse(line);
+
+              if (data.type === 'progress') {
+                setEmailLogs(prev => [
+                  ...prev,
+                  {
+                    message: data.message,
+                    status: data.status,
+                    timestamp: Date.now()
+                  }
+                ]);
+              } else if (data.type === 'summary') {
+                setEmailSummary({
+                  total: data.total,
+                  successful: data.successful,
+                  failed: data.failed
+                });
+                toast.success(`Complete: ${data.successful} sent, ${data.failed} failed`);
+              } else if (data.type === 'error') {
+                setEmailLogs(prev => [...prev, { message: `FATAL ERROR: ${data.message}`, status: 'error', timestamp: Date.now() }]);
+                toast.error('Process failed abruptly');
+              }
+            } catch (e) {
+              console.error('Error parsing log entry', e);
+            }
+          }
+        }
+
+        if (done) break;
+      }
+    } catch (error: any) {
       console.error('Error sending credentials:', error);
-      toast.error('Failed to send credentials', {
-        id: loadingToast,
-      });
+      setEmailLogs(prev => [...prev, { message: `Failed to initiate: ${error.message}`, status: 'error', timestamp: Date.now() }]);
+      toast.error('Failed to send credentials');
+    } finally {
+      setIsEmailProcessing(false);
     }
   };
 
@@ -506,6 +562,15 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <EmailLogModal
+        open={showLogModal}
+        onOpenChange={setShowLogModal}
+        logs={emailLogs}
+        isProcessing={isEmailProcessing}
+        onClose={() => setShowLogModal(false)}
+        summary={emailSummary}
+      />
     </Card >
   );
 }

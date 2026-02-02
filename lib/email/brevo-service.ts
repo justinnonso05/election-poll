@@ -28,7 +28,8 @@ class BrevoEmailService {
       process.env.BREVO_API_KEY_CHI,
       process.env.BREVO_API_KEY_JUS,
       process.env.BREVO_API_KEY_SULT1,
-      process.env.BREVO_API_KEY_SULT2,
+      // process.env.BREVO_API_KEY_SULT2,
+      process.env.BREVO_API_KEY_STACKS,
       // Add more keys as needed
     ].filter((key): key is string => !!key);
 

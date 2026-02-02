@@ -59,6 +59,7 @@
     "node-fetch": "^3.3.2",
     "pdf-parse": "^2.2.1",
     "pdfjs-dist": "^5.4.296",
+    "radix-ui": "^1.4.3",
     "react": "^19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.63.0",
