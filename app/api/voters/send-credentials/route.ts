@@ -20,11 +20,17 @@ export async function POST(request: NextRequest) {
 
     const admin = await prisma.admin.findUnique({
       where: { id: session.user.id },
+      include: { association: true },
     });
 
     if (!admin) {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
     }
+
+    const election = await prisma.election.findFirst({
+      where: { associationId: admin.associationId },
+      orderBy: { createdAt: 'desc' },
+    });
 
     const body = await request.json();
     const { voterIds } = body;
@@ -44,6 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No voters found' }, { status: 404 });
     }
 
+    // Default to platform base URL, but template uses hardcoded naosspoll.vercel.app as requested
     const loginUrl = `${process.env.NEXTAUTH_URL}/voter/login`;
 
     // 2. Setup Streaming Response
@@ -69,6 +76,11 @@ export async function POST(request: NextRequest) {
                 studentId: voter.studentId,
                 password: voter.password,
                 loginUrl,
+                // Add new fields
+                logoUrl: admin.association.logoUrl,
+                associationName: admin.association.name,
+                startDate: election?.startAt,
+                endDate: election?.endAt,
               });
 
               const emailData = {

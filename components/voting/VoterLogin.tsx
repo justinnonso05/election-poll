@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Vote, Lock, User, Shield } from 'lucide-react';
+import { Vote, Lock, User, Shield, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function VoterLogin() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     studentId: '',
     password: '',
@@ -94,13 +95,25 @@ export default function VoterLogin() {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
                     placeholder="Enter your password"
-                    className="pl-11 h-12 border-gray-200 focus:border-slate-400 focus:ring-slate-400"
+                    className="pl-11 pr-11 h-12 border-gray-200 focus:border-slate-400 focus:ring-slate-400"
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -120,8 +133,7 @@ export default function VoterLogin() {
                 <div className="text-sm text-gray-600">
                   <p className="font-medium mb-1">Secure Voting</p>
                   <p>
-                    Your vote is anonymous and encrypted. Contact your association administrator if
-                    you need assistance.
+                    Contact your association administrator if you need assistance.
                   </p>
                 </div>
               </div>
