@@ -28,7 +28,8 @@ export function generateVoterCredentialsEmail(data: VoterCredentials): {
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true
+      hour12: true,
+      timeZone: 'Africa/Lagos', // Force GMT+1
     });
   };
 
