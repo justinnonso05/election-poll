@@ -91,21 +91,21 @@ export default async function ManifestoPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header - Minimal padding on mobile */}
-      <div className="border-b bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-1 sm:px-3 lg:px-8 py-2 sm:py-3 lg:py-6">
-          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+      <div className="border-b bg-white/50 dark:bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6">
+          <div className="flex items-center gap-3">
             {election.association.logoUrl && (
               <img
                 src={election.association.logoUrl}
                 alt={election.association.name}
-                className="w-7 h-7 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg object-cover flex-shrink-0"
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-lg object-cover flex-shrink-0"
               />
             )}
             <div className="min-w-0 flex-1">
-              <h1 className="text-sm sm:text-lg lg:text-xl xl:text-2xl font-bold truncate">
+              <h1 className="text-base sm:text-xl font-bold truncate">
                 {election.association.name}
               </h1>
-              <p className="text-xs sm:text-sm lg:text-base text-muted-foreground truncate">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
                 Candidate Manifestos & Q&A
               </p>
             </div>
@@ -114,42 +114,43 @@ export default async function ManifestoPage() {
       </div>
 
       {/* Stats Cards - Minimal padding and gaps on mobile */}
-      <div className="max-w-6xl mx-auto px-2 sm:px-3 lg:px-8 py-2 sm:py-3 lg:py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-2 lg:gap-4 mb-3 sm:mb-4 lg:mb-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 lg:py-8">
+        {/* Stats Strip — always 3 columns */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card>
-            <CardContent className="p-2 sm:p-3 lg:p-4 flex items-center gap-1 sm:gap-2 lg:gap-3">
-              <div className="w-5 h-5 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-blue-600 dark:text-blue-400" />
+            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground">Manifestos Available</p>
-                <p className="text-sm sm:text-base lg:text-lg font-bold">{candidates.length}</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground leading-tight">Manifestos</p>
+                <p className="text-base sm:text-lg font-bold">{candidates.length}</p>
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
-            <CardContent className="p-2 sm:p-3 lg:p-4 flex items-center gap-1 sm:gap-2 lg:gap-3">
-              <div className="w-5 h-5 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Users className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-green-600 dark:text-green-400" />
+            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground">Positions</p>
-                <p className="text-sm sm:text-base lg:text-lg font-bold">
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground leading-tight">Positions</p>
+                <p className="text-base sm:text-lg font-bold">
                   {new Set(candidates.map(c => c.positionId)).size}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="sm:col-span-2 lg:col-span-1">
-            <CardContent className="p-2 sm:p-3 lg:p-4 flex items-center gap-1 sm:gap-2 lg:gap-3">
-              <div className="w-5 h-5 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 text-purple-600 dark:text-purple-400" />
+          <Card>
+            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm text-muted-foreground">Ask Questions</p>
-                <p className="text-sm sm:text-base lg:text-lg font-bold">AI Powered</p>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground leading-tight">Ask AI</p>
+                <p className="text-base sm:text-lg font-bold">5/day</p>
               </div>
             </CardContent>
           </Card>
