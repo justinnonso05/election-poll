@@ -424,12 +424,7 @@ export default function VotingInterface({ voter, election, positions }: VotingIn
                               Running for {currentPosition.name}
                             </p>
 
-                            {/* Manifesto */}
-                            {candidate.manifesto && (
-                              <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed text-left">
-                                {candidate.manifesto}
-                              </p>
-                            )}
+
                           </div>
                         </div>
                       ))}

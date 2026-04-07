@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Calendar, Users, Vote, Eye, Plus, Play, Pause, Square, Clock } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Calendar, Users, Vote, Eye, Plus, Play, Pause, Square, Clock, Radio } from 'lucide-react';
 import CreateElectionDialog from './CreateElectionDialog';
 import ElectionDetailsModal from './ElectionDetailsModal';
 import { toast } from 'sonner';
@@ -17,6 +19,7 @@ type ElectionWithCounts = Election & {
     votes?: number;
   };
   positions?: unknown[];
+  liveResults?: boolean;
 };
 
 interface ElectionManagementSectionProps {
@@ -33,6 +36,8 @@ export default function ElectionManagementSection({
   isSuper,
 }: ElectionManagementSectionProps) {
   const [loading, setLoading] = useState(false);
+  const [liveResultsLoading, setLiveResultsLoading] = useState(false);
+  const [liveResults, setLiveResults] = useState(election?.liveResults ?? false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
@@ -122,6 +127,29 @@ export default function ElectionManagementSection({
 
   const handleElectionUpdate = () => {
     window.location.reload();
+  };
+
+  const handleLiveResultsToggle = async (enabled: boolean) => {
+    if (!election) return;
+    setLiveResultsLoading(true);
+    try {
+      const res = await fetch(`/api/election/${election.id}/live-results`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ liveResults: enabled }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setLiveResults(enabled);
+        toast.success(data.message);
+      } else {
+        toast.error(data.error || 'Failed to update live results');
+      }
+    } catch {
+      toast.error('Something went wrong');
+    } finally {
+      setLiveResultsLoading(false);
+    }
   };
 
   if (!election) {
@@ -275,6 +303,34 @@ export default function ElectionManagementSection({
           )}
         </div>
       </div>
+
+      {/* Live Results Toggle — SUPERADMIN only */}
+      {isSuper && (
+        <div className="flex items-start justify-between rounded-lg border p-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Radio className="h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="live-results-switch" className="text-sm font-medium cursor-pointer">
+                Live Results
+              </Label>
+              {liveResults && (
+                <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 hover:bg-green-100">
+                  On
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              When enabled, voters can view live vote counts on the results page while the election is in progress.
+            </p>
+          </div>
+          <Switch
+            id="live-results-switch"
+            checked={liveResults}
+            onCheckedChange={handleLiveResultsToggle}
+            disabled={liveResultsLoading}
+          />
+        </div>
+      )}
 
       {/* Election Details Modal */}
       <ElectionDetailsModal

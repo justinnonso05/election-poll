@@ -164,15 +164,9 @@ async function processManifestoPDF(file: File, candidateId: string) {
     // @ts-expect-error
     const secureUrl = uploadRes.secure_url;
 
-    // Step 3: Generate AI summary (only if not already exists)
-    let summary = candidate.manifestoSummary; // Check if summary already exists
-
-    if (!summary || summary.trim().length < 50) {
-      console.log('Generating new manifesto summary...');
-      summary = await generateManifestoSummary(extracted.text, candidate.name);
-    } else {
-      console.log('Using existing manifesto summary (skipping AI generation)');
-    }
+    // Step 3: Generate AI summary
+    console.log('Generating fresh manifesto summary...');
+    const summary = await generateManifestoSummary(extracted.text, candidate.name);
 
     // Step 4: Update candidate in database
     const updatedCandidate = await prisma.candidate.update({
@@ -184,22 +178,13 @@ async function processManifestoPDF(file: File, candidateId: string) {
       },
     });
 
-    // Step 5: Index manifesto in vector store for Q&A (only if not already indexed)
-    const alreadyIndexed = await ManifestoVectorStore.manifestoExists(
+    // Step 5: Index/Update manifesto in vector store for Q&A
+    console.log('Indexing manifesto in vector store (force update)...');
+    await ManifestoVectorStore.updateManifesto(
       candidateId,
-      candidate.electionId
+      candidate.electionId,
+      extracted.text
     );
-
-    if (!alreadyIndexed) {
-      console.log('Indexing manifesto in vector store...');
-      await ManifestoVectorStore.addManifesto(
-        candidateId,
-        candidate.electionId,
-        extracted.text
-      );
-    } else {
-      console.log('Manifesto already indexed, skipping vector store update');
-    }
 
     return success('Manifesto uploaded, processed, and indexed successfully', {
       candidate: {

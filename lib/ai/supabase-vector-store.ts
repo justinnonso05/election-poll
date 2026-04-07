@@ -67,10 +67,11 @@ export class ManifestoVectorStore {
           // Generate embedding
           const embeddingArray = await embeddings.embedQuery(chunk);
 
-          // DIRECT INSERT - This is the key change!
+          // Generate a UUID to satisfy the not-null constraint on the 'id' column
           const { data, error } = await supabaseAdmin
             .from('manifesto_embeddings')
             .insert({
+              id: crypto.randomUUID(), 
               electionId: electionId,
               candidateId: candidateId,
               chunkText: chunk,

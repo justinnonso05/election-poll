@@ -1,13 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ExternalLink, FileText, Eye, EyeOff } from 'lucide-react';
-import Image from 'next/image';
+import { ExternalLink, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Candidate {
   id: string;
@@ -20,124 +16,117 @@ interface Candidate {
 
 interface CandidateManifestoCardProps {
   candidate: Candidate;
-  isSelected: boolean;
-  onSelectionChange: (selected: boolean) => void;
 }
 
 function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-export function CandidateManifestoCard({ 
-  candidate, 
-  isSelected, 
-  onSelectionChange 
-}: CandidateManifestoCardProps) {
-  const [showFullSummary, setShowFullSummary] = useState(false);
+function formatSummaryIntoParagraphs(text: string): string[] {
+  // Split on double newlines or numbered points or bullet marks
+  const parts = text
+    .split(/\n{2,}|\r\n\r\n/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 30);
 
-  const handleViewManifesto = () => {
-    if (candidate.manifestoUrl) {
-      window.open(candidate.manifestoUrl, '_blank');
+  // If only one chunk came back, try splitting on sentence boundaries every ~2 sentences
+  if (parts.length <= 1) {
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    const chunks: string[] = [];
+    for (let i = 0; i < sentences.length; i += 2) {
+      const chunk = sentences.slice(i, i + 2).join(' ').trim();
+      if (chunk) chunks.push(chunk);
     }
-  };
+    return chunks.length > 0 ? chunks : [text];
+  }
 
-  const truncatedSummary = candidate.manifestoSummary?.slice(0, 150) + '...';
-  const shouldTruncate = candidate.manifestoSummary && candidate.manifestoSummary.length > 150;
+  return parts;
+}
+
+export function CandidateManifestoCard({ candidate }: CandidateManifestoCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  const paragraphs = candidate.manifestoSummary
+    ? formatSummaryIntoParagraphs(candidate.manifestoSummary)
+    : [];
+
+  const visibleParagraphs = expanded ? paragraphs : paragraphs.slice(0, 2);
+  const hasMore = paragraphs.length > 2;
 
   return (
-    <Card className={`transition-all duration-200 h-full flex flex-col ${isSelected ? 'ring-2 ring-primary border-primary' : ''}`}>
-      {/* Reduced header padding on mobile */}
-      <CardHeader className="pb-2 sm:pb-3 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 flex-shrink-0">
-        <div className="flex items-start gap-1 sm:gap-2 lg:gap-3">
-          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={onSelectionChange}
-              className="mt-0.5 w-3 h-3 sm:w-4 sm:h-4"
-            />
-            {candidate.photoUrl ? (
-              <Image
-                src={candidate.photoUrl}
-                alt={candidate.name}
-                width={28}
-                height={28}
-                className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 object-cover rounded-full border flex-shrink-0"
-              />
-            ) : (
-              <Avatar className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 flex-shrink-0">
-                <AvatarFallback className="text-xs sm:text-sm">
-                  {getInitials(candidate.name)}
-                </AvatarFallback>
-              </Avatar>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-xs sm:text-sm lg:text-base leading-tight line-clamp-2 break-words">
-              {candidate.name}
-            </CardTitle>
-            <Badge variant="secondary" className="text-xs mt-1 max-w-full truncate px-1 sm:px-2 py-0.5">
-              {candidate.position}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
+    <div className="rounded-xl border bg-card p-5 flex flex-col gap-4 h-full">
+      {/* Candidate Header */}
+      <div className="flex items-center gap-3">
+        <Avatar className="w-10 h-10 flex-shrink-0">
+          {candidate.photoUrl && (
+            <AvatarImage src={candidate.photoUrl} alt={candidate.name} />
+          )}
+          <AvatarFallback className="text-sm font-medium">
+            {getInitials(candidate.name)}
+          </AvatarFallback>
+        </Avatar>
 
-      {/* Reduced content padding on mobile */}
-      <CardContent className="space-y-2 sm:space-y-3 flex-1 flex flex-col pt-0 px-2 sm:px-4 lg:px-6 pb-2 sm:pb-3 lg:pb-4">
-        {candidate.manifestoSummary ? (
-          <div className="space-y-1 sm:space-y-2 flex-1">
-            <h4 className="text-xs font-medium text-muted-foreground">Summary:</h4>
-            <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed break-words hyphens-auto">
-              {shouldTruncate && !showFullSummary 
-                ? truncatedSummary 
-                : candidate.manifestoSummary
-              }
-            </div>
-            {shouldTruncate && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFullSummary(!showFullSummary)}
-                className="text-xs p-0 h-auto text-primary hover:text-primary/80 self-start"
+        <div className="min-w-0">
+          <p className="font-semibold text-sm leading-snug truncate">{candidate.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{candidate.position}</p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-border" />
+
+      {/* Summary Body */}
+      <div className="flex-1">
+        {paragraphs.length > 0 ? (
+          <div className="space-y-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Manifesto Summary
+            </p>
+            {visibleParagraphs.map((para, i) => (
+              <p key={i} className="text-sm text-foreground leading-relaxed">
+                {para}
+              </p>
+            ))}
+            {hasMore && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors mt-1"
               >
-                {showFullSummary ? (
+                {expanded ? (
                   <>
-                    <EyeOff className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                    <span className="text-xs">Less</span>
+                    <ChevronUp className="w-3 h-3" /> Show less
                   </>
                 ) : (
                   <>
-                    <Eye className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                    <span className="text-xs">More</span>
+                    <ChevronDown className="w-3 h-3" /> Read more
                   </>
                 )}
-              </Button>
+              </button>
             )}
           </div>
         ) : (
-          <div className="text-xs sm:text-sm text-muted-foreground italic flex-1">
-            No summary available
-          </div>
+          <p className="text-sm text-muted-foreground italic">No summary available yet.</p>
         )}
+      </div>
 
-        {candidate.manifestoUrl && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleViewManifesto}
-            className="w-full text-xs sm:text-sm mt-auto px-2 sm:px-3 py-1 sm:py-2 h-auto"
+      {/* Footer Action */}
+      {candidate.manifestoUrl && (
+        <>
+          <div className="h-px bg-border" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => window.open(candidate.manifestoUrl!, '_blank')}
+            className="w-full justify-between text-sm font-normal h-8 px-0 hover:bg-transparent hover:text-foreground text-muted-foreground"
           >
-            <FileText className="w-2 h-2 sm:w-3 sm:h-3 lg:w-4 lg:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-            <span className="truncate flex-1">View Manifesto</span>
-            <ExternalLink className="w-2 h-2 sm:w-3 sm:h-3 ml-1 sm:ml-2 flex-shrink-0" />
+            <span className="flex items-center gap-2">
+              <FileText className="w-3.5 h-3.5" />
+              View full manifesto
+            </span>
+            <ExternalLink className="w-3.5 h-3.5" />
           </Button>
-        )}
-      </CardContent>
-    </Card>
+        </>
+      )}
+    </div>
   );
 }
