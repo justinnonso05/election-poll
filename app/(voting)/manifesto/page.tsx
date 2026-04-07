@@ -115,28 +115,28 @@ export default async function ManifestoPage() {
 
       {/* Stats Cards - Minimal padding and gaps on mobile */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 lg:py-8">
-        {/* Stats Strip — always 3 columns */}
+        {/* Stats Strip — always 3 columns, vertical stack on mobile */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card>
-            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+            <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:gap-3 gap-1">
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground leading-tight">Manifestos</p>
-                <p className="text-base sm:text-lg font-bold">{candidates.length}</p>
+              <div className="text-center sm:text-left min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">Manifestos</p>
+                <p className="text-sm sm:text-lg font-bold">{candidates.length}</p>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
+            <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:gap-3 gap-1">
+              <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground leading-tight">Positions</p>
-                <p className="text-base sm:text-lg font-bold">
+              <div className="text-center sm:text-left min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">Positions</p>
+                <p className="text-sm sm:text-lg font-bold">
                   {new Set(candidates.map(c => c.positionId)).size}
                 </p>
               </div>
@@ -144,13 +144,13 @@ export default async function ManifestoPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-3 sm:p-4 flex items-center gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
+            <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-center sm:gap-3 gap-1">
+              <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground leading-tight">Ask AI</p>
-                <p className="text-base sm:text-lg font-bold">5/day</p>
+              <div className="text-center sm:text-left min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">Ask AI</p>
+                <p className="text-sm sm:text-lg font-bold">5/day</p>
               </div>
             </CardContent>
           </Card>
