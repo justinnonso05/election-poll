@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileSpreadsheet, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle, XCircle, AlertTriangle, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -99,17 +99,15 @@ export default function VoterUpload() {
         };
         Object.keys(row).forEach((key) => {
           const normalizedKey = key.toLowerCase().replace(/\s+/g, '_');
-          if (normalizedKey.includes('first') && normalizedKey.includes('name')) {
+          if (normalizedKey === 'first_name' || (normalizedKey.includes('first') && normalizedKey.includes('name'))) {
             mapped.first_name = String(row[key] ?? '').trim();
-          } else if (normalizedKey.includes('last') && normalizedKey.includes('name')) {
+          } else if (normalizedKey === 'last_name' || (normalizedKey.includes('last') && normalizedKey.includes('name'))) {
             mapped.last_name = String(row[key] ?? '').trim();
           } else if (normalizedKey.includes('email')) {
-            mapped.email = String(row[key] ?? '')
-              .trim()
-              .toLowerCase();
+            mapped.email = String(row[key] ?? '').trim().toLowerCase();
           } else if (normalizedKey.includes('level')) {
             mapped.level = String(row[key] ?? '').trim();
-          } else if (normalizedKey.includes('matric') || normalizedKey.includes('student_id')) {
+          } else if (normalizedKey === 'studentid' || normalizedKey === 'student_id' || normalizedKey.includes('matric')) {
             mapped.studentId = String(row[key] ?? '').trim();
           }
         });
@@ -144,17 +142,15 @@ export default function VoterUpload() {
         };
         Object.keys(row).forEach((key) => {
           const normalizedKey = key.toLowerCase().replace(/\s+/g, '_');
-          if (normalizedKey.includes('first') && normalizedKey.includes('name')) {
+          if (normalizedKey === 'first_name' || (normalizedKey.includes('first') && normalizedKey.includes('name'))) {
             mapped.first_name = String(row[key] ?? '').trim();
-          } else if (normalizedKey.includes('last') && normalizedKey.includes('name')) {
+          } else if (normalizedKey === 'last_name' || (normalizedKey.includes('last') && normalizedKey.includes('name'))) {
             mapped.last_name = String(row[key] ?? '').trim();
           } else if (normalizedKey.includes('email')) {
-            mapped.email = String(row[key] ?? '')
-              .trim()
-              .toLowerCase();
+            mapped.email = String(row[key] ?? '').trim().toLowerCase();
           } else if (normalizedKey.includes('level')) {
             mapped.level = String(row[key] ?? '').trim();
-          } else if (normalizedKey.includes('matric') || normalizedKey.includes('student_id')) {
+          } else if (normalizedKey === 'studentid' || normalizedKey === 'student_id' || normalizedKey.includes('matric')) {
             mapped.studentId = String(row[key] ?? '').trim();
           }
         });
@@ -191,6 +187,29 @@ export default function VoterUpload() {
     setPreviewData([]);
     setUploadResults(null);
     setValidationErrors([]);
+  };
+
+  const downloadTemplate = () => {
+    const headers = ['first_name', 'last_name', 'email', 'level', 'studentId'];
+    const sampleRows = [
+      ['John', 'Doe', 'johndoe@university.edu', '300', 'STU/2021/0001'],
+      ['Jane', 'Smith', 'janesmith@university.edu', '200', 'STU/2022/0042'],
+    ];
+    const csvContent = [
+      headers.join(','),
+      ...sampleRows.map((row) => row.join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'voters_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    toast.success('Template downloaded');
   };
 
   const handleClose = () => {
@@ -293,14 +312,28 @@ export default function VoterUpload() {
                   </div>
 
                   <div className="mt-4">
-                    <h4 className="font-medium mb-2">Required Columns:</h4>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                      <h4 className="font-medium text-sm">Required Columns:</h4>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={downloadTemplate}
+                        className="gap-1.5 text-xs h-8 w-full sm:w-auto"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download Template
+                      </Button>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {requiredFields.map((field) => (
                         <Badge key={field} variant="outline">
-                          {field === 'studentId' ? 'Matric Number' : field.replace('_', ' ')}
+                          {field === 'studentId' ? 'studentId' : field}
                         </Badge>
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Download the template above to get a pre-formatted CSV with sample data.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
