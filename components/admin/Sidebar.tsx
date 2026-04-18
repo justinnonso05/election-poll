@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   Crown,
+  ClipboardList,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
@@ -43,6 +44,11 @@ const navItems = [
     title: 'Candidates',
     href: '/admin/dashboard/candidates',
     icon: UserCheck,
+  },
+  {
+    title: 'Form Responses',
+    href: '/admin/dashboard/form-responses',
+    icon: ClipboardList,
   },
   {
     title: 'Settings',

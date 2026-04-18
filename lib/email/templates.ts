@@ -227,3 +227,131 @@ Secure Voting Platform
 
   return { subject, htmlContent, textContent };
 }
+
+// ─── Candidate Registration Receipt ───────────────────────────────────────────
+
+export interface CandidateReceiptData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  matricNumber: string;
+  level: string;
+  positionName: string;
+  electionTitle: string;
+  associationName: string;
+  associationDescription?: string;
+  submittedAt: Date;
+  logoUrl?: string | null;
+}
+
+export function generateCandidateReceiptEmail(data: CandidateReceiptData): {
+  subject: string;
+  htmlContent: string;
+  textContent: string;
+} {
+  const subject = `Candidate Registration Receipt — ${data.associationName}`;
+  const accentColor = '#080c18';
+
+  const formatDate = (date: Date) =>
+    new Date(date).toLocaleString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Africa/Lagos',
+    });
+
+  const logoHtml = data.logoUrl
+    ? `<img src="${data.logoUrl}" alt="${data.associationName}" style="height:56px;width:auto;display:block;margin-bottom:10px;">`
+    : '';
+
+  const htmlContent = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Candidate Registration Receipt</title>
+    <style>
+      body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5;color:#1a1a1a;margin:0;padding:0;background:#f4f4f5;}
+      .container{max-width:600px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.07);}
+      .header{background:${accentColor};padding:28px 36px 22px;color:#fff;}
+      .header-name{font-size:18px;font-weight:700;color:#fff;margin:0 0 2px;}
+      .header-desc{font-size:12px;color:rgba(255,255,255,.65);margin:0;}
+      .date-bar{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 36px;font-size:12px;color:#64748b;text-align:right;}
+      .content{padding:24px 36px 32px;}
+      h1{font-size:15px;font-weight:700;color:${accentColor};margin:0 0 4px;text-transform:uppercase;letter-spacing:.5px;}
+      .subtitle{font-size:12px;color:#64748b;margin:0 0 18px;}
+      table.details{width:100%;border-collapse:collapse;margin:14px 0 20px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;}
+      table.details tr:last-child td{border-bottom:none;}
+      table.details td{padding:9px 14px;font-size:13px;border-bottom:1px solid #f1f5f9;}
+      table.details td:first-child{color:#64748b;width:40%;font-weight:600;background:#f8fafc;}
+      table.details td:last-child{color:${accentColor};font-weight:700;}
+      .note{font-size:12.5px;color:#555;font-style:italic;background:#f8fafc;border-left:3px solid ${accentColor};padding:10px 14px;border-radius:0 4px 4px 0;margin-top:4px;}
+      .footer{text-align:center;padding:16px;font-size:11px;color:#94a3b8;background:#f8fafc;border-top:1px solid #e2e8f0;}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        ${logoHtml}
+        <div class="header-name">${data.associationName}</div>
+        ${data.associationDescription ? `<div class="header-desc">${data.associationDescription}</div>` : ''}
+      </div>
+      <div class="date-bar">${formatDate(data.submittedAt)}</div>
+      <div class="content">
+        <h1>Electoral Commission</h1>
+        <p class="subtitle">Candidate Registration Receipt — ${data.electionTitle}</p>
+        <p>Dear <strong>${data.firstName} ${data.lastName}</strong>,</p>
+        <p>Your candidate registration form has been received. Your official e-form receipt is attached to this email as a PDF.</p>
+        <table class="details">
+          <tr><td>First Name</td><td>${data.firstName}</td></tr>
+          <tr><td>Last Name</td><td>${data.lastName}</td></tr>
+          <tr><td>Email</td><td>${data.email}</td></tr>
+          <tr><td>Phone</td><td>${data.phone}</td></tr>
+          <tr><td>Matric Number</td><td>${data.matricNumber}</td></tr>
+          <tr><td>Level</td><td>${data.level} Level</td></tr>
+          <tr><td>Position Applied</td><td>${data.positionName}</td></tr>
+          <tr><td>Election</td><td>${data.electionTitle}</td></tr>
+        </table>
+        <div class="note">Please keep the attached PDF as proof of your registration. Further communication regarding screening will be sent separately.</div>
+      </div>
+      <div class="footer">
+        <p>${data.associationName} Electoral Commission</p>
+        <p>&copy; ${new Date().getFullYear()} ${data.associationName}. All rights reserved.</p>
+      </div>
+    </div>
+  </body>
+  </html>`;
+
+  const textContent = `
+Candidate Registration Receipt — ${data.associationName}
+${data.associationDescription ? data.associationDescription + '\n' : ''}
+Date: ${formatDate(data.submittedAt)}
+
+Dear ${data.firstName} ${data.lastName},
+
+Your candidate registration has been received. Details:
+
+First Name:    ${data.firstName}
+Last Name:     ${data.lastName}
+Email:         ${data.email}
+Phone:         ${data.phone}
+Matric Number: ${data.matricNumber}
+Level:         ${data.level} Level
+Position:      ${data.positionName}
+Election:      ${data.electionTitle}
+
+Please keep the attached PDF as proof of your registration.
+
+${data.associationName} Electoral Commission
+© ${new Date().getFullYear()} ${data.associationName}
+  `.trim();
+
+  return { subject, htmlContent, textContent };
+}
+

@@ -9,16 +9,17 @@ datasource db {
 }
 
 model Association {
-  id          String     @id @default(uuid())
-  name        String     @unique
-  description String?
-  logoUrl     String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  admins      Admin[]
-  elections   Election[]
-  positions   Position[]
-  voters      Voter[]
+  id                    String                  @id @default(uuid())
+  name                  String                  @unique
+  description           String?
+  logoUrl               String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  admins                Admin[]
+  elections             Election[]
+  positions             Position[]
+  voters                Voter[]
+  candidateFormResponses CandidateFormResponse[]
 }
 
 model Admin {
@@ -49,34 +50,36 @@ model Voter {
 }
 
 model Election {
-  id            String      @id @default(uuid())
-  title         String
-  description   String?
-  associationId String
-  startAt       DateTime
-  endAt         DateTime
-  isActive      Boolean     @default(false)
-  liveResults   Boolean     @default(false)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  candidates    Candidate[]
-  association   Association @relation(fields: [associationId], references: [id])
-  votes         Vote[]
-  manifestoEmbeddings ManifestoEmbedding[] // Add this relation
+  id                    String                  @id @default(uuid())
+  title                 String
+  description           String?
+  associationId         String
+  startAt               DateTime
+  endAt                 DateTime
+  isActive              Boolean                 @default(false)
+  liveResults           Boolean                 @default(false)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  candidates            Candidate[]
+  association           Association             @relation(fields: [associationId], references: [id])
+  votes                 Vote[]
+  manifestoEmbeddings   ManifestoEmbedding[]    // Add this relation
   frequentlyAskedQuestions FrequentlyAskedQuestion[] // Add this line
+  candidateFormResponses CandidateFormResponse[]
 }
 
 model Position {
-  id            String      @id @default(uuid())
-  name          String
-  description   String?
-  order         Int         @default(0)
-  maxCandidates Int         @default(10)
-  associationId String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  candidates    Candidate[]
-  association   Association @relation(fields: [associationId], references: [id])
+  id                    String                  @id @default(uuid())
+  name                  String
+  description           String?
+  order                 Int                     @default(0)
+  maxCandidates         Int                     @default(10)
+  associationId         String
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  candidates            Candidate[]
+  association           Association             @relation(fields: [associationId], references: [id])
+  candidateFormResponses CandidateFormResponse[]
 
   @@unique([name, associationId])
 }
@@ -142,6 +145,29 @@ model FrequentlyAskedQuestion {
   
   @@unique([electionId, question])
   @@map("frequently_asked_questions")
+}
+
+model CandidateFormResponse {
+  id               String    @id @default(uuid())
+  firstName        String
+  lastName         String
+  email            String
+  phone            String
+  matricNumber     String
+  level            String
+  positionId       String
+  electionId       String
+  associationId    String
+  receiptSentAt    DateTime?
+  addedAsCandidate Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  position    Position    @relation(fields: [positionId], references: [id])
+  election    Election    @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  association Association @relation(fields: [associationId], references: [id])
+
+  @@map("candidate_form_responses")
 }
 
 enum AdminRole {

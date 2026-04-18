@@ -5,6 +5,7 @@ interface EmailData {
   subject: string;
   htmlContent: string;
   textContent?: string;
+  attachments?: { name: string; content: string }[]; // base64 encoded
 }
 
 interface SendEmailResult {
@@ -95,6 +96,12 @@ class BrevoEmailService {
       sendSmtpEmail.subject = emailData.subject;
       sendSmtpEmail.htmlContent = emailData.htmlContent;
       sendSmtpEmail.textContent = emailData.textContent;
+      if (emailData.attachments && emailData.attachments.length > 0) {
+        (sendSmtpEmail as any).attachment = emailData.attachments.map((a) => ({
+          name: a.name,
+          content: a.content,
+        }));
+      }
 
       const response = await apiInstance.sendTransacEmail(sendSmtpEmail);
 
