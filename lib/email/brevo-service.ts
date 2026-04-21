@@ -20,15 +20,15 @@ class BrevoEmailService {
   private currentKeyIndex: number = 0;
   private keyUsageCount: Map<string, number> = new Map();
   private readonly MAX_EMAILS_PER_KEY = 300; // Brevo free plan: 300 emails per day per account
-  private readonly SENDER_EMAIL = 'noreply@duespay.app'; // Your verified domain
-  private readonly SENDER_NAME = 'Election Poll';
+  private readonly SENDER_EMAIL = 'nacospoll@justinch.dev'; // Your verified domain
+  private readonly SENDER_NAME = 'NACOS Poll';
 
   constructor() {
     // Load all Brevo API keys from environment
     this.apiKeys = [
       process.env.BREVO_API_KEY_CHI,
       process.env.BREVO_API_KEY_JUS,
-      process.env.BREVO_API_KEY_SULT1,
+      // process.env.BREVO_API_KEY_SULT1,
       // process.env.BREVO_API_KEY_SULT2,
       process.env.BREVO_API_KEY_STACKS,
       process.env.BREVO_API_KEY_JCM,
