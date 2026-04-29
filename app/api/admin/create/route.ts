@@ -4,6 +4,8 @@ import { success, fail } from '@/lib/apiREsponse';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import bcrypt from 'bcryptjs';
+import { brevoEmailService } from '@/lib/email/brevo-service';
+import { generateAdminCredentialsEmail } from '@/lib/email/templates';
 
 export async function POST(req: Request) {
   try {
@@ -30,6 +32,12 @@ export async function POST(req: Request) {
 
     // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
+
+    // Fetch association details for the email template
+    const association = await prisma.association.findUnique({
+      where: { id: session.user.associationId },
+      select: { name: true, logoUrl: true }
+    });
 
     // Use the superadmin's association ID
     const admin = await prisma.admin.create({

@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Loader2,
   UserCircle2,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -75,6 +76,7 @@ export default function ManageAdminsPage() {
   const [createdAdmin, setCreatedAdmin] = useState<AdminCreate | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [roleUpdating, setRoleUpdating] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     fetchAdmins();
@@ -139,6 +141,32 @@ export default function ManageAdminsPage() {
         `Email: ${createdAdmin.email}\nPassword: ${createdAdmin.password}`
       );
       toast.success('Credentials copied to clipboard');
+    }
+  };
+
+  const sendCredentialsEmail = async () => {
+    if (!createdAdmin) return;
+    setSendingEmail(true);
+    try {
+      const response = await fetch('/api/admin/send-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: createdAdmin.email,
+          password: createdAdmin.password,
+          role: createdAdmin.role,
+        }),
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        toast.success('Credentials sent to email');
+      } else {
+        toast.error(data.message || 'Failed to send credentials');
+      }
+    } catch {
+      toast.error('Failed to send email');
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -294,10 +322,22 @@ export default function ManageAdminsPage() {
               </div>
             </div>
 
-            <Button size="sm" variant="outline" onClick={copyCredentials} className="gap-2 text-xs">
-              <Copy className="h-3.5 w-3.5" />
-              Copy Both
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={copyCredentials} className="gap-2 text-xs flex-1 sm:flex-none">
+                <Copy className="h-3.5 w-3.5" />
+                Copy Both
+              </Button>
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={sendCredentialsEmail} 
+                disabled={sendingEmail}
+                className="gap-2 text-xs flex-1 sm:flex-none bg-green-700 hover:bg-green-800 text-white"
+              >
+                {sendingEmail ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+                {sendingEmail ? 'Sending...' : 'Send to Email'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -355,3 +355,171 @@ ${data.associationName} Electoral Commission
   return { subject, htmlContent, textContent };
 }
 
+// ─── Admin Credentials ───────────────────────────────────────────
+
+export interface AdminCredentials {
+  email: string;
+  password: string;
+  role: string;
+  loginUrl: string;
+  associationName?: string;
+  logoUrl?: string | null;
+}
+
+export function generateAdminCredentialsEmail(data: AdminCredentials): {
+  subject: string;
+  htmlContent: string;
+  textContent: string;
+} {
+  const subject = `Admin Credentials - ${data.associationName || 'Election Poll'}`;
+  const accentColor = '#080c18';
+
+  const logoHtml = data.logoUrl
+    ? `<img src="${data.logoUrl}" alt="${data.associationName || 'Logo'}" style="max-height: 80px; width: auto; display: block; margin: 0 auto;">`
+    : `<h2 style="color: ${accentColor}; margin: 0;">${data.associationName || 'Election Poll'}</h2>`;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Admin Credentials</title>
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          line-height: 1.5;
+          color: #1a1a1a;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f5;
+        }
+        .container {
+          max-width: 600px;
+          margin: 40px auto;
+          background: #ffffff;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .header {
+          text-align: center;
+          padding: 40px 40px 20px 40px;
+          background: #ffffff;
+        }
+        .content {
+          padding: 20px 40px 40px 40px;
+        }
+        .greeting {
+          font-size: 18px;
+          margin-bottom: 20px;
+          color: #333;
+        }
+        .credentials-card {
+          background-color: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 24px;
+          margin: 24px 0;
+          text-align: center;
+        }
+        .credential-row {
+          margin-bottom: 12px;
+          font-size: 16px;
+        }
+        .credential-row:last-child {
+          margin-bottom: 0;
+        }
+        .label {
+          color: #64748b;
+          font-size: 14px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          display: block;
+          margin-bottom: 4px;
+        }
+        .value {
+          color: ${accentColor};
+          font-family: "Courier New", Courier, monospace;
+          font-weight: 700;
+          font-size: 20px;
+          letter-spacing: 1px;
+        }
+        .login-btn {
+          display: inline-block;
+          background-color: ${accentColor};
+          color: #ffffff !important;
+          padding: 16px 32px;
+          border-radius: 6px;
+          text-decoration: none;
+          font-weight: 600;
+          margin: 10px 0 30px 0;
+          text-align: center;
+        }
+        .footer {
+          text-align: center;
+          padding: 20px;
+          font-size: 12px;
+          color: #94a3b8;
+          background-color: #f8fafc;
+          border-top: 1px solid #e2e8f0;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          ${logoHtml}
+        </div>
+        
+        <div class="content">
+          <p class="greeting">Hello,</p>
+          
+          <p>You have been assigned the role of <strong>${data.role}</strong> for <strong>${data.associationName || 'Association'}</strong>. Below are your login credentials.</p>
+          
+          <div class="credentials-card">
+            <div class="credential-row">
+              <span class="label">Email</span>
+              <span class="value">${data.email}</span>
+            </div>
+            <div class="credential-row">
+              <span class="label">Password</span>
+              <span class="value">${data.password}</span>
+            </div>
+          </div>
+          
+          <div style="text-align: center;">
+            <a href="${data.loginUrl}" class="login-btn">Login Now</a>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <p>Secure Admin Platform</p>
+          <p>&copy; ${new Date().getFullYear()} ${data.associationName || 'Election Poll'}. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const textContent = `
+Admin Credentials - ${data.associationName || 'Election Poll'}
+
+Hello,
+
+You have been assigned the role of ${data.role} for ${data.associationName || 'Association'}.
+
+YOUR CREDENTIALS:
+------------------
+Email: ${data.email}
+Password: ${data.password}
+------------------
+
+LOGIN HERE: ${data.loginUrl}
+
+Secure Admin Platform
+© ${new Date().getFullYear()} ${data.associationName || 'Election Poll'}
+  `;
+
+  return { subject, htmlContent, textContent };
+}
