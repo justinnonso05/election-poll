@@ -25,8 +25,8 @@ export async function POST(req: Request) {
       select: { name: true, logoUrl: true }
     });
 
-    const url = new URL(req.url);
-    const loginUrl = `${url.protocol}//${url.host}/admin/login`;
+    const baseUrl = process.env.FRONTEND_BASE_URL || process.env.NEXTAUTH_URL || 'https://nacospoll.vercel.app';
+    const loginUrl = `${baseUrl}/admin/login`;
 
     const emailContent = generateAdminCredentialsEmail({
       email,
