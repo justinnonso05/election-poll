@@ -128,7 +128,17 @@ export async function POST(req: NextRequest) {
           });
           if (!existing) {
             await prisma.candidate.create({
-              data: { name: fullName, electionId: r.electionId, positionId: r.positionId },
+              data: {
+                name: fullName,
+                electionId: r.electionId,
+                positionId: r.positionId,
+                formResponseId: r.id,
+              },
+            });
+          } else if (!existing.formResponseId) {
+            await prisma.candidate.update({
+              where: { id: existing.id },
+              data: { formResponseId: r.id },
             });
           }
           await prisma.candidateFormResponse.update({

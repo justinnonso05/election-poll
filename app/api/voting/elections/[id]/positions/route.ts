@@ -64,11 +64,24 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             name: true,
             manifesto: true,
             photoUrl: true,
+            createdAt: true,
+            formResponse: {
+              select: {
+                createdAt: true,
+              },
+            },
           },
-          orderBy: { name: 'asc' },
         },
       },
       orderBy: { order: 'asc' },
+    });
+
+    positions.forEach((position) => {
+      position.candidates.sort((a, b) => {
+        const timeA = a.formResponse?.createdAt.getTime() ?? a.createdAt.getTime();
+        const timeB = b.formResponse?.createdAt.getTime() ?? b.createdAt.getTime();
+        return timeA - timeB;
+      });
     });
 
     // Filter out positions with no candidates (optional - you can keep them if you want to show empty positions)

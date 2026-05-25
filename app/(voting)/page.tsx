@@ -74,11 +74,24 @@ async function getElectionPositions(electionId: string, associationId: string) {
           name: true,
           manifesto: true,
           photoUrl: true,
+          createdAt: true,
+          formResponse: {
+            select: {
+              createdAt: true,
+            },
+          },
         },
-        orderBy: { name: 'asc' },
       },
     },
     orderBy: { order: 'asc' },
+  });
+
+  positions.forEach((position) => {
+    position.candidates.sort((a, b) => {
+      const timeA = a.formResponse?.createdAt.getTime() ?? a.createdAt.getTime();
+      const timeB = b.formResponse?.createdAt.getTime() ?? b.createdAt.getTime();
+      return timeA - timeB;
+    });
   });
 
   // Filter out positions with no candidates
@@ -90,7 +103,10 @@ export default async function VotingPage() {
 
   // If not logged in, show login form
   if (!session) {
-    return <VoterLogin />;
+    const association = await prisma.association.findFirst({
+      select: { logoUrl: true, name: true },
+    });
+    return <VoterLogin logoUrl={association?.logoUrl || null} associationName={association?.name || 'Student'} />;
   }
 
   // Check if voter exists and hasn't voted

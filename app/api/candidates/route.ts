@@ -56,8 +56,22 @@ export async function GET(req: Request) {
         _count: {
           select: { votes: true },
         },
+        formResponse: {
+          select: {
+            createdAt: true,
+          },
+        },
       },
-      orderBy: [{ position: { order: 'asc' } }, { name: 'asc' }],
+      orderBy: { position: { order: 'asc' } },
+    });
+
+    candidates.sort((a, b) => {
+      const posDiff = (a.position?.order ?? 0) - (b.position?.order ?? 0);
+      if (posDiff !== 0) return posDiff;
+
+      const timeA = a.formResponse?.createdAt.getTime() ?? a.createdAt.getTime();
+      const timeB = b.formResponse?.createdAt.getTime() ?? b.createdAt.getTime();
+      return timeA - timeB;
     });
 
     return success('Candidates fetched successfully', candidates);

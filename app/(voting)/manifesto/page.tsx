@@ -12,11 +12,12 @@ async function getElectionData() {
         candidates: {
           include: {
             position: true,
+            formResponse: {
+              select: {
+                createdAt: true,
+              },
+            },
           },
-          orderBy: [
-            { position: { order: 'asc' } },
-            { name: 'asc' }
-          ]
         },
         association: {
           select: {
@@ -30,6 +31,15 @@ async function getElectionData() {
     if (!election) {
       return null;
     }
+
+    election.candidates.sort((a, b) => {
+      const posDiff = (a.position?.order ?? 0) - (b.position?.order ?? 0);
+      if (posDiff !== 0) return posDiff;
+
+      const timeA = a.formResponse?.createdAt.getTime() ?? a.createdAt.getTime();
+      const timeB = b.formResponse?.createdAt.getTime() ?? b.createdAt.getTime();
+      return timeA - timeB;
+    });
 
     // Filter candidates that have manifestos
     const candidatesWithManifestos = election.candidates.filter(

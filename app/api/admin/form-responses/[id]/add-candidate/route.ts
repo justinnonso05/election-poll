@@ -53,6 +53,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         name: fullName,
         electionId: formResponse.electionId,
         positionId: formResponse.positionId,
+        formResponseId: id,
       },
     });
 

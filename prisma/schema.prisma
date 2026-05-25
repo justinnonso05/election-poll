@@ -99,6 +99,8 @@ model Candidate {
   position         Position @relation(fields: [positionId], references: [id])
   votes            Vote[]
   manifestoEmbeddings ManifestoEmbedding[] // Add this relation
+  formResponseId   String?  @unique
+  formResponse     CandidateFormResponse? @relation(fields: [formResponseId], references: [id], onDelete: SetNull)
 
   @@unique([electionId, positionId, name])
 }
@@ -166,6 +168,7 @@ model CandidateFormResponse {
   position    Position    @relation(fields: [positionId], references: [id])
   election    Election    @relation(fields: [electionId], references: [id], onDelete: Cascade)
   association Association @relation(fields: [associationId], references: [id])
+  candidate   Candidate?
 
   @@map("candidate_form_responses")
 }

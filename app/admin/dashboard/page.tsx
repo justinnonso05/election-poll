@@ -58,11 +58,23 @@ async function getDashboardData(associationId: string) {
           votes: {
             select: { id: true },
           },
+          formResponse: {
+            select: {
+              createdAt: true,
+            },
+          },
         },
-        orderBy: { name: 'asc' },
       },
     },
     orderBy: { order: 'asc' },
+  });
+
+  positions.forEach((position) => {
+    position.candidates.sort((a, b) => {
+      const timeA = a.formResponse?.createdAt.getTime() ?? a.createdAt.getTime();
+      const timeB = b.formResponse?.createdAt.getTime() ?? b.createdAt.getTime();
+      return timeA - timeB;
+    });
   });
 
   // Process position results with vote counts and tie detection

@@ -60,8 +60,13 @@ export default async function CandidatesPage() {
         _count: {
           select: { votes: true },
         },
+        formResponse: {
+          select: {
+            createdAt: true,
+          },
+        },
       },
-      orderBy: [{ position: { order: 'asc' } }, { name: 'asc' }],
+      orderBy: { position: { order: 'asc' } },
     }),
 
     prisma.election.findMany({
@@ -71,15 +76,24 @@ export default async function CandidatesPage() {
     }),
   ]);
 
-  // Convert dates to strings to avoid serialization issues
-  const candidates = candidatesData.map((candidate) => ({
-    ...candidate,
-    election: {
-      ...candidate.election,
-      startAt: candidate.election.startAt.toISOString(),
-      endAt: candidate.election.endAt.toISOString(),
-    },
-  }));
+  // Convert dates to strings and sort in-memory to avoid serialization issues
+  const candidates = candidatesData
+    .map((candidate) => ({
+      ...candidate,
+      election: {
+        ...candidate.election,
+        startAt: candidate.election.startAt.toISOString(),
+        endAt: candidate.election.endAt.toISOString(),
+      },
+    }))
+    .sort((a, b) => {
+      const posDiff = (a.position?.order ?? 0) - (b.position?.order ?? 0);
+      if (posDiff !== 0) return posDiff;
+
+      const timeA = a.formResponse?.createdAt.getTime() ?? a.createdAt.getTime();
+      const timeB = b.formResponse?.createdAt.getTime() ?? b.createdAt.getTime();
+      return timeA - timeB;
+    });
 
   return (
     <div className="space-y-6">
