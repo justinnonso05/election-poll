@@ -15,10 +15,15 @@ const geistMono = Geist_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  // Fetch association info directly from the DB using Prisma
-  const association = await prisma.association.findFirst({
-    select: { name: true, logoUrl: true },
-  });
+  // Fetch association info safely (try/catch prevents build crashes if DB connection drops)
+  let association = null;
+  try {
+    association = await prisma.association.findFirst({
+      select: { name: true, logoUrl: true },
+    });
+  } catch (error) {
+    console.warn("Could not fetch association for metadata. Using defaults.");
+  }
 
   return {
     title: association?.name ? `${association.name} Poll` : 'Election Management System',

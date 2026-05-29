@@ -19,7 +19,7 @@ export async function getActiveElection() {
 
 export async function addCriteria(electionId: string, name: string, weight: number) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== 'SUPERADMIN') throw new Error('Unauthorized');
+  if (!session?.user || session.user.role !== 'SUPERADMIN') throw new Error('Unauthorized');
 
   const election = await prisma.election.findUnique({
     where: { id: electionId },
@@ -46,7 +46,7 @@ export async function addCriteria(electionId: string, name: string, weight: numb
 
 export async function removeCriteria(id: string) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== 'SUPERADMIN') throw new Error('Unauthorized');
+  if (!session?.user || session.user.role !== 'SUPERADMIN') throw new Error('Unauthorized');
 
   await prisma.screeningCriteria.delete({
     where: { id }
@@ -57,7 +57,7 @@ export async function removeCriteria(id: string) {
 
 export async function setQualificationScore(electionId: string, score: number) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== 'SUPERADMIN') throw new Error('Unauthorized');
+  if (!session?.user || session.user.role !== 'SUPERADMIN') throw new Error('Unauthorized');
 
   await prisma.screeningSetting.upsert({
     where: { electionId },
@@ -70,7 +70,7 @@ export async function setQualificationScore(electionId: string, score: number) {
 
 export async function submitScores(candidateId: string, scores: Record<string, number>) {
   const session = await getServerSession(authOptions);
-  if (!session) throw new Error('Unauthorized');
+  if (!session?.user) throw new Error('Unauthorized');
 
   const adminId = session.user.id;
 

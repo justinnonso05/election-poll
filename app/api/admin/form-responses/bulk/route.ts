@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       return fail('action and ids[] are required', null, 400);
     }
 
-    if (action === 'delete' && session.user.role !== 'SUPERADMIN') {
+    if (action === 'delete' && (!session?.user || session.user.role !== 'SUPERADMIN')) {
       return fail('Forbidden: only SUPERADMIN can delete responses', null, 403);
     }
 

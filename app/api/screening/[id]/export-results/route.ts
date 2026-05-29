@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
   const params = await props.params;
   const session = await getServerSession(authOptions);
   
-  if (!session || session.user.role !== 'SUPERADMIN') {
+  if (!session?.user || session.user.role !== 'SUPERADMIN') {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     const results = await getComputedResults(election.id);
     const pdfBuffer = await generateScreeningResultsPDF(election, results);
     
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="screening-results-${election.id}.pdf"`,

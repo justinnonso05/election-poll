@@ -12,7 +12,7 @@ export async function PUT(req: Request) {
       return fail('Unauthorized', null, 401);
     }
 
-    if (session.user.role !== 'SUPERADMIN') {
+    if (!session?.user || session.user.role !== 'SUPERADMIN') {
       return fail('Forbidden: Only Super Admins can update roles', null, 403);
     }
 

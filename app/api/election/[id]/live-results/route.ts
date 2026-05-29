@@ -11,7 +11,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    if (session.user.role !== 'SUPERADMIN') {
+    if (!session?.user || session.user.role !== 'SUPERADMIN') {
       return NextResponse.json(
         { error: 'Forbidden: Only superadmins can toggle live results.' },
         { status: 403 }

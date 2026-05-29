@@ -10,7 +10,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) return fail('Unauthorized', null, 401);
-    if (session.user.role !== 'SUPERADMIN') return fail('Forbidden', null, 403);
+    if (!session?.user || session.user.role !== 'SUPERADMIN') return fail('Forbidden', null, 403);
 
     const admin = await prisma.admin.findUnique({
       where: { id: session.user.id },
