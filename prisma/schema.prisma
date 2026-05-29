@@ -31,6 +31,7 @@ model Admin {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   association   Association @relation(fields: [associationId], references: [id])
+  screeningScores ScreeningScore[]
 }
 
 model Voter {
@@ -66,6 +67,8 @@ model Election {
   manifestoEmbeddings   ManifestoEmbedding[]    // Add this relation
   frequentlyAskedQuestions FrequentlyAskedQuestion[] // Add this line
   candidateFormResponses CandidateFormResponse[]
+  screeningCriteria     ScreeningCriteria[]
+  screeningSetting      ScreeningSetting?
 }
 
 model Position {
@@ -101,6 +104,7 @@ model Candidate {
   manifestoEmbeddings ManifestoEmbedding[] // Add this relation
   formResponseId   String?  @unique
   formResponse     CandidateFormResponse? @relation(fields: [formResponseId], references: [id], onDelete: SetNull)
+  screeningScores  ScreeningScore[]
 
   @@unique([electionId, positionId, name])
 }
@@ -177,3 +181,44 @@ enum AdminRole {
   SUPERADMIN
   ADMIN
 }
+
+model ScreeningCriteria {
+  id            String   @id @default(uuid())
+  electionId    String
+  name          String
+  weight        Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  election      Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+  scores        ScreeningScore[]
+
+  @@unique([electionId, name])
+}
+
+model ScreeningSetting {
+  id                 String   @id @default(uuid())
+  electionId         String   @unique
+  qualificationScore Float    
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  election           Election @relation(fields: [electionId], references: [id], onDelete: Cascade)
+}
+
+model ScreeningScore {
+  id            String   @id @default(uuid())
+  candidateId   String
+  adminId       String
+  criteriaId    String
+  score         Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  candidate     Candidate         @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  admin         Admin             @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  criteria      ScreeningCriteria @relation(fields: [criteriaId], references: [id], onDelete: Cascade)
+
+  @@unique([candidateId, adminId, criteriaId])
+}
+

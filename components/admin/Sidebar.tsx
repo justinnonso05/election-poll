@@ -18,6 +18,7 @@ import {
   Moon,
   Crown,
   ClipboardList,
+  ClipboardCheck,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useTheme } from 'next-themes';
@@ -54,6 +55,11 @@ const navItems = [
     title: 'Settings',
     href: '/admin/dashboard/settings',
     icon: Settings,
+  },
+  {
+    title: 'Screening',
+    href: '/admin/dashboard/screening',
+    icon: ClipboardCheck,
   },
 ];
 

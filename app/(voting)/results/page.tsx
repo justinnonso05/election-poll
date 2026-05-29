@@ -3,6 +3,7 @@ import { formatDateLong } from '@/lib/timezone';
 import LiveResultsPage from '@/components/results/LiveResultsPage';
 import { Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import ResultsCountdown from '@/components/results/ResultsCountdown';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -101,10 +102,28 @@ async function getPositionResults(electionId: string, associationId: string) {
   });
 }
 
+async function getOngoingElection() {
+  const ongoing = await prisma.election.findFirst({
+    where: { 
+      isActive: true, 
+      liveResults: false, 
+      endAt: { gt: new Date() } 
+    },
+    orderBy: { endAt: 'asc' },
+  });
+  return ongoing;
+}
+
 export default async function ResultsPage() {
   const data = await getResultsData();
 
   if (!data) {
+    const ongoingElection = await getOngoingElection();
+    
+    if (ongoingElection) {
+      return <ResultsCountdown endAt={ongoingElection.endAt.toISOString()} />;
+    }
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full text-center">
