@@ -34,8 +34,14 @@ export async function GET(
       include: {
         association: true,
         candidates: {
+          where: {
+            NOT: {
+              name: { contains: 'undecided', mode: 'insensitive' }
+            }
+          },
           include: {
             position: true,
+            formResponse: true,
             _count: {
               select: { votes: true },
             },

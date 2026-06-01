@@ -15,6 +15,7 @@ type ElectionWithData = Election & {
   association: Association;
   candidates: (Candidate & {
     position: Position;
+    formResponse?: any;
     _count: { votes: number };
   })[];
   votes: (Vote & {
@@ -397,10 +398,17 @@ export async function generateCandidatesPDF(election: ElectionWithData): Promise
     if (initializedPages.has(pageNumber)) return;
     initializedPages.add(pageNumber);
     
-    if (pageNumber > 1) {
+    addFooter(doc, pageNumber);
+  };
+
+  // Patch addPage to inject watermark UNDER the tables on new pages
+  const originalAddPage = doc.addPage.bind(doc);
+  doc.addPage = function (...args: any[]) {
+    originalAddPage(...args);
+    if (logoDataUri) {
       addWatermark(doc, logoDataUri);
     }
-    addFooter(doc, pageNumber);
+    return this;
   };
 
   addHeader(doc, reportTitle, election.association, logoDataUri, false);
@@ -423,56 +431,42 @@ export async function generateCandidatesPDF(election: ElectionWithData): Promise
 
   yPos += 12;
 
-  const positionMap = new Map<string, typeof election.candidates>();
-  election.candidates.forEach(candidate => {
-    const positionId = candidate.position.id;
-    if (!positionMap.has(positionId)) positionMap.set(positionId, []);
-    positionMap.get(positionId)!.push(candidate);
+  const candidates = [...election.candidates].sort((a, b) => {
+    // 1. Position Order
+    if (a.position.order !== b.position.order) {
+      return a.position.order - b.position.order;
+    }
+    // 2. Registration Date (first to last)
+    const timeA = a.formResponse?.createdAt ? new Date(a.formResponse.createdAt).getTime() : new Date(a.createdAt).getTime();
+    const timeB = b.formResponse?.createdAt ? new Date(b.formResponse.createdAt).getTime() : new Date(b.createdAt).getTime();
+    return timeA - timeB;
   });
 
-  Array.from(positionMap.entries())
-    .sort(([, a], [, b]) => a[0].position.order - b[0].position.order)
-    .forEach(([, candidates], index) => {
-      const position = candidates[0].position;
+  const tableData = candidates.map((candidate, idx) => [
+    (idx + 1).toString(),
+    candidate.name,
+    candidate.formResponse?.level ? `${candidate.formResponse.level} Level` : 'N/A',
+    candidate.position.name,
+  ]);
 
-      if (index > 0 && yPos > doc.internal.pageSize.height - 40) {
-        doc.addPage();
-        yPos = 20;
-        initPage();
-      }
-
-      doc.setFontSize(13);
-      doc.setFont('helvetica', 'bold');
-      doc.text(position.name, 14, yPos);
-      yPos += 8;
-
-      const tableData = candidates.map((candidate, idx) => [
-        (idx + 1).toString(),
-        candidate.name,
-        candidate.manifesto ? 'Yes' : 'No',
-        formatDateLong(candidate.createdAt),
-      ]);
-
-      autoTable(doc, {
-        startY: yPos,
-        head: [['#', 'Candidate Name', 'Has Manifesto', 'Registered']],
-        body: tableData,
-        theme: 'striped',
-        headStyles: { fillColor: [r, g, b], textColor: 255, fontSize: 10, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        styles: { fontSize: 9, cellPadding: 4 },
-        columnStyles: {
-          0: { cellWidth: 10 },
-          1: { cellWidth: 70 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 55 },
-        },
-        margin: { top: 20, bottom: 20 },
-        didDrawPage: initPage,
-      });
-
-      yPos = (doc as any).lastAutoTable?.finalY + 10 || yPos + 30;
-    });
+  autoTable(doc, {
+    startY: yPos,
+    head: [['#', 'Candidate Name', 'Level', 'Position']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [r, g, b], textColor: 255, fontSize: 10, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    styles: { fontSize: 9, cellPadding: 4, fillColor: [255, 255, 255] },
+    rowPageBreak: 'avoid',
+    columnStyles: {
+      0: { cellWidth: 15 },
+      1: { cellWidth: 65 },
+      2: { cellWidth: 35 },
+      3: { cellWidth: 55 },
+    },
+    margin: { top: 20, bottom: 20 },
+    didDrawPage: initPage,
+  });
 
   return Buffer.from(doc.output('arraybuffer'));
 }
