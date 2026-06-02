@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Search, Eye, Mail, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { Search, Eye, Mail, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Filter, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,9 +250,37 @@ export default function VotersTable({ voters: initialVoters }: VotersTableProps)
       <CardHeader className="p-4 sm:p-6">
         <div className="flex flex-col gap-4">
           {/* Title */}
-          <CardTitle className="text-lg sm:text-xl">
-            All Voters ({filteredVoters.length})
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg sm:text-xl">
+              All Voters ({filteredVoters.length})
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const headers = ['first_name', 'last_name', 'email', 'level', 'studentId'];
+                const csvContent = [
+                  headers.join(','),
+                  ...filteredVoters.map((voter) =>
+                    [voter.first_name, voter.last_name, voter.email, voter.level, voter.studentId].join(',')
+                  ),
+                ].join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Voters_Export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                toast.success('Voters list exported to CSV');
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export List
+            </Button>
+          </div>
 
           {/* Search and Actions Row */}
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
