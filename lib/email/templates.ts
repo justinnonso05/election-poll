@@ -34,6 +34,7 @@ export function generateVoterCredentialsEmail(data: VoterCredentials): {
   };
 
   const startStr = formatDate(data.startDate);
+  const endStr = formatDate(data.endDate);
 
   // Using the specific platform dark mode background color as accent
   const accentColor = '#080c18';
@@ -179,12 +180,13 @@ export function generateVoterCredentialsEmail(data: VoterCredentials): {
           </div>
           
           <div style="text-align: center;">
-            <a href="https://naosspoll.vercel.app/" class="login-btn">Login to Vote</a>
+            <a href="https://nacospoll.vercel.app/" class="login-btn">Login to Vote</a>
           </div>
           
           <div class="election-info">
             <h3 class="info-title">📅 Election Schedule</h3>
             <p style="margin: 5px 0;"><strong>Starts:</strong> ${startStr}</p>
+            <p style="margin: 5px 0;"><strong>Ends:</strong> ${endStr}</p>
             
             <div class="note">
               <strong>Note:</strong> You will only be able to login and cast your vote during this period. Please plan accordingly.

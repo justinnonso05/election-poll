@@ -68,13 +68,20 @@ export async function setQualificationScore(electionId: string, score: number) {
   revalidatePath('/admin/dashboard/screening');
 }
 
-export async function submitScores(candidateId: string, scores: Record<string, number>) {
+export async function submitScores(candidateId: string, scores: Record<string, number | null>) {
   const session = await getServerSession(authOptions);
   if (!session?.user) throw new Error('Unauthorized');
 
   const adminId = session.user.id;
 
   for (const [criteriaId, score] of Object.entries(scores)) {
+    if (score === null) {
+      await prisma.screeningScore.deleteMany({
+        where: { candidateId, adminId, criteriaId }
+      });
+      continue;
+    }
+
     // Validate score vs weight
     const criteria = await prisma.screeningCriteria.findUnique({ where: { id: criteriaId } });
     if (!criteria) continue;

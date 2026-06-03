@@ -47,11 +47,15 @@ export default function ScreeningSheet({ election, adminId }: { election: any, a
     const candidateScores = scores[candidateId];
     if (!candidateScores) return;
 
-    const parsedScores: Record<string, number> = {};
+    const parsedScores: Record<string, number | null> = {};
     for (const [critId, val] of Object.entries(candidateScores)) {
-      const num = parseFloat(val);
-      if (!isNaN(num)) {
-        parsedScores[critId] = num;
+      if (val === '') {
+        parsedScores[critId] = null;
+      } else {
+        const num = parseFloat(val);
+        if (!isNaN(num)) {
+          parsedScores[critId] = num;
+        }
       }
     }
 
