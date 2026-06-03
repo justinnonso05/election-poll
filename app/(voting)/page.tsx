@@ -102,6 +102,13 @@ async function getElectionPositions(electionId: string, associationId: string) {
 export default async function VotingPage() {
   const session = await getVoterSession();
 
+  const logoutAction = async () => {
+    'use server';
+    const cookieStore = await cookies();
+    cookieStore.delete('voter-session');
+    redirect('/');
+  };
+
   // If not logged in, show login form
   if (!session) {
     const association = await prisma.association.findFirst({
@@ -124,8 +131,10 @@ export default async function VotingPage() {
   });
 
   if (!voter) {
-    // Invalid session, redirect to logout
-    redirect('/logout');
+    // Invalid session, delete cookie and redirect to login
+    const cookieStore = await cookies();
+    cookieStore.delete('voter-session');
+    redirect('/');
   }
 
   // If voter has already voted, show thank you message
@@ -155,7 +164,7 @@ export default async function VotingPage() {
             >
               View Results
             </Link>
-            <form action="/logout" method="POST" className="flex">
+            <form action={logoutAction} className="flex">
               <button
                 type="submit"
                 className="w-full px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
@@ -195,7 +204,7 @@ export default async function VotingPage() {
               ? `The election "${upcomingElection.title}" will begin on ${upcomingElection.startAt.toLocaleDateString()}.`
               : 'There are no active elections at this time.'}
           </p>
-          <form action="/logout" method="POST">
+          <form action={logoutAction}>
             <button
               type="submit"
               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
@@ -221,7 +230,7 @@ export default async function VotingPage() {
           <p className="text-muted-foreground mb-6 text-sm sm:text-base">
             There are no candidates registered for the current election.
           </p>
-          <form action="/logout" method="POST">
+          <form action={logoutAction}>
             <button
               type="submit"
               className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
