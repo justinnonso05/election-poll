@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import VoterLogin from '@/components/voting/VoterLogin';
 import VotingInterface from '@/components/voting/VotingInterface';
@@ -143,17 +144,26 @@ export default async function VotingPage() {
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Vote Submitted!</h1>
           <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-            Your vote has been successfully recorded. Thank you for participating in the democratic
-            process.
+            Your vote has been successfully recorded. Thank you for participating in the democratic process.
+            <br /><br />
+            You can view the live or final results of the election once they are available by clicking the button below.
           </p>
-          <form action="/logout" method="POST">
-            <button
-              type="submit"
-              className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Link 
+              href="/results"
+              className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors flex items-center justify-center font-medium"
             >
-              Close
-            </button>
-          </form>
+              View Results
+            </Link>
+            <form action="/logout" method="POST" className="flex">
+              <button
+                type="submit"
+                className="w-full px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              >
+                Logout
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     );

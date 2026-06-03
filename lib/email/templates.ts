@@ -189,7 +189,8 @@ export function generateVoterCredentialsEmail(data: VoterCredentials): {
             <p style="margin: 5px 0;"><strong>Ends:</strong> ${endStr}</p>
             
             <div class="note">
-              <strong>Note:</strong> You will only be able to login and cast your vote during this period. Please plan accordingly.
+              <strong>Note:</strong> You will only be able to login and cast your vote during this period. Please plan accordingly.<br><br>
+              After the election concludes at <strong>${endStr}</strong>, you can <a href="https://nacospoll.vercel.app/results" style="color: ${accentColor}; font-weight: bold; text-decoration: underline;">view the final results here</a>.
             </div>
           </div>
         </div>
@@ -220,8 +221,10 @@ LOGIN HERE: https://naosspoll.vercel.app/
 
 ELECTION SCHEDULE:
 Starts: ${startStr}
+Ends: ${endStr}
 
 NOTE: You will only be able to login and cast your vote during this period.
+After the election concludes at ${endStr}, you can view the final results here: https://nacospoll.vercel.app/results
 
 Secure Voting Platform
 © ${new Date().getFullYear()} ${data.associationName || 'Election Poll'}
