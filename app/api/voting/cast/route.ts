@@ -103,14 +103,9 @@ export async function POST(req: Request) {
       });
     });
 
-    // Immediately destroy session after successful vote
-    const cookieStore = await cookies();
-    cookieStore.delete('voter-session');
-
     return success(
       'Your votes have been cast successfully. Thank you for participating in the democratic process!',
       {
-        message: 'You will now be logged out automatically for security purposes.',
         votedAt: new Date().toISOString(),
       }
     );
