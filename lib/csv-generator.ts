@@ -24,7 +24,8 @@ export function generateResultsCSV(election: ElectionWithData): string {
   rows.push(['Association:', election.association.name]);
   rows.push(['Start Date:', new Date(election.startAt).toLocaleString()]);
   rows.push(['End Date:', new Date(election.endAt).toLocaleString()]);
-  rows.push(['Total Votes:', election.votes.length.toString()]);
+  const uniqueVoters = new Set(election.votes.map(v => v.voterId)).size;
+  rows.push(['Total Voters:', uniqueVoters.toString()]);
   rows.push([]);
 
   // Group candidates by position

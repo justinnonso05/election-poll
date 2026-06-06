@@ -230,10 +230,11 @@ export async function generateResultsPDF(election: ElectionWithData): Promise<Bu
   doc.text(`${formatDateLong(election.startAt)} - ${formatDateLong(election.endAt)}`, 50, yPos);
 
   yPos += 7;
+  const uniqueVoters = new Set(election.votes.map(v => v.voterId)).size;
   doc.setFont('helvetica', 'bold');
-  doc.text('Total Votes:', 14, yPos);
+  doc.text('Total Voters:', 14, yPos);
   doc.setFont('helvetica', 'normal');
-  doc.text(election.votes.length.toString(), 50, yPos);
+  doc.text(uniqueVoters.toString(), 50, yPos);
 
   yPos += 12;
 
