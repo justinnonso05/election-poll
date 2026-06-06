@@ -49,12 +49,6 @@ export async function POST(req: Request) {
       return fail('Voter not found', null, 404);
     }
 
-    if (voter.hasVoted) {
-      const cookieStore = await cookies();
-      cookieStore.delete('voter-session');
-      return fail('You have already voted. Multiple voting is not allowed.', null, 403);
-    }
-
     // Verify election is still active and belongs to voter's association
     const election = await prisma.election.findFirst({
       where: {
@@ -71,7 +65,12 @@ export async function POST(req: Request) {
     }
 
     // Verify all candidates belong to the election and positions
+    const seenPositions = new Set();
     for (const vote of votes) {
+      if (seenPositions.has(vote.positionId)) {
+        return fail('Multiple votes for the same position detected.', null, 400);
+      }
+      seenPositions.add(vote.positionId);
       const candidate = await prisma.candidate.findFirst({
         where: {
           id: vote.candidateId,
@@ -86,8 +85,23 @@ export async function POST(req: Request) {
     }
 
     // Cast all votes in a transaction
-    await prisma.$transaction(async (tx) => {
-      // Create vote records (anonymous - no direct link to voter identity in vote record)
+    const transactionResult = await prisma.$transaction(async (tx) => {
+      // 1. Atomically check and update the voter. 
+      // This updateMany will ONLY match if hasVoted is currently false.
+      const updateResult = await tx.voter.updateMany({
+        where: { 
+          id: session.id,
+          hasVoted: false
+        },
+        data: { hasVoted: true },
+      });
+
+      // If count is 0, it means they either don't exist or already voted (race condition caught!)
+      if (updateResult.count === 0) {
+        return { success: false, message: 'You have already voted. Multiple voting is not allowed.' };
+      }
+
+      // 2. Create vote records
       await tx.vote.createMany({
         data: votes.map((vote) => ({
           voterId: session.id,
@@ -96,12 +110,14 @@ export async function POST(req: Request) {
         })),
       });
 
-      // Mark voter as having voted
-      await tx.voter.update({
-        where: { id: session.id },
-        data: { hasVoted: true },
-      });
+      return { success: true };
     });
+
+    if (!transactionResult.success) {
+      const cookieStore = await cookies();
+      cookieStore.delete('voter-session');
+      return fail(transactionResult.message as string, null, 403);
+    }
 
     return success(
       'Your votes have been cast successfully. Thank you for participating in the democratic process!',
