@@ -246,7 +246,7 @@ export default function ElectionManagementSection({
         <Card className="shadow-none">
           <CardContent className="p-4 text-center">
             <Vote className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Total Votes</p>
+            <p className="text-sm text-muted-foreground">Total Voters</p>
             <p className="text-2xl font-bold text-foreground">{election._count?.votes || 0}</p>
           </CardContent>
         </Card>

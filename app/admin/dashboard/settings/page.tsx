@@ -59,6 +59,18 @@ export default async function SettingsPage() {
     },
   });
 
+  if (election) {
+    // Override the counts for the UI display
+    election._count.candidates = election.candidates.filter(
+      (c) => !c.name.toLowerCase().includes('undecided')
+    ).length;
+    
+    // Count unique voters who have voted instead of sum of all cast votes
+    election._count.votes = await prisma.voter.count({
+      where: { associationId: admin.associationId, hasVoted: true },
+    });
+  }
+
   // Calculate election status
   const electionStatus = calculateElectionStatus(election);
 
